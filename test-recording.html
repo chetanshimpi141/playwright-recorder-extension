@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Recording Test Page</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 600px;
+            margin: 50px auto;
+            padding: 20px;
+            line-height: 1.6;
+        }
+        .test-section {
+            margin: 20px 0;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+        button {
+            background: #007bff;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover {
+            background: #0056b3;
+        }
+        input, select {
+            padding: 8px;
+            margin: 5px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        .status {
+            background: #f8f9fa;
+            padding: 10px;
+            border-radius: 4px;
+            margin: 10px 0;
+        }
+        .recording-indicator {
+            position: fixed;
+            top: 10px;
+            right: 10px;
+            background: red;
+            color: white;
+            padding: 5px 10px;
+            border-radius: 4px;
+            font-size: 12px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Playwright Recorder Test Page</h1>
+    
+    <div class="status">
+        <strong>Instructions:</strong>
+        <ol>
+            <li>Start recording in the extension</li>
+            <li>Interact with the elements below</li>
+            <li>Check that recording continues when you switch tabs and come back</li>
+            <li>Stop recording and download the script</li>
+        </ol>
+    </div>
+
+    <div class="test-section">
+        <h3>Basic Interactions</h3>
+        <button id="test-button">Click Me</button>
+        <button id="test-button-2">Click Me Too</button>
+        <input type="text" id="test-input" placeholder="Type something here">
+        <select id="test-select">
+            <option value="">Select an option</option>
+            <option value="option1">Option 1</option>
+            <option value="option2">Option 2</option>
+            <option value="option3">Option 3</option>
+        </select>
+    </div>
+
+    <div class="test-section">
+        <h3>Form Elements</h3>
+        <label>
+            <input type="checkbox" id="test-checkbox"> Check me
+        </label>
+        <br>
+        <label>
+            <input type="radio" name="test-radio" value="radio1"> Radio 1
+        </label>
+        <label>
+            <input type="radio" name="test-radio" value="radio2"> Radio 2
+        </label>
+        <br>
+        <textarea id="test-textarea" placeholder="Type in textarea" rows="3"></textarea>
+    </div>
+
+    <div class="test-section">
+        <h3>Navigation Test</h3>
+        <p>Try clicking this link and then going back:</p>
+        <a href="https://example.com" target="_blank">External Link (opens in new tab)</a>
+        <br>
+        <a href="#section1">Internal Link</a>
+    </div>
+
+    <div id="section1" class="test-section">
+        <h3>Section 1</h3>
+        <p>This is section 1 content.</p>
+        <button id="section-button">Section Button</button>
+    </div>
+
+    <div class="test-section">
+        <h3>Dynamic Content</h3>
+        <button id="add-content">Add Dynamic Content</button>
+        <div id="dynamic-content"></div>
+    </div>
+
+    <script>
+        // Add event listeners for testing
+        document.getElementById('test-button').addEventListener('click', function() {
+            alert('Button 1 clicked!');
+        });
+
+        document.getElementById('test-button-2').addEventListener('click', function() {
+            alert('Button 2 clicked!');
+        });
+
+        document.getElementById('add-content').addEventListener('click', function() {
+            const container = document.getElementById('dynamic-content');
+            const newElement = document.createElement('div');
+            newElement.innerHTML = `
+                <p>Dynamic content added at ${new Date().toLocaleTimeString()}</p>
+                <button class="dynamic-btn">Dynamic Button</button>
+            `;
+            container.appendChild(newElement);
+        });
+
+        // Add click handler for dynamic buttons
+        document.addEventListener('click', function(e) {
+            if (e.target.classList.contains('dynamic-btn')) {
+                alert('Dynamic button clicked!');
+            }
+        });
+
+        // Log page visibility changes
+        document.addEventListener('visibilitychange', function() {
+            console.log('Page visibility changed:', document.hidden ? 'hidden' : 'visible');
+        });
+
+        // Log window focus changes
+        window.addEventListener('focus', function() {
+            console.log('Window focused');
+        });
+
+        window.addEventListener('blur', function() {
+            console.log('Window blurred');
+        });
+
+        console.log('Test page loaded successfully!');
+    </script>
+</body>
+</html> 

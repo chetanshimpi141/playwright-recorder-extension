@@ -1,0 +1,311 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Playwright Recorder Test Page</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            line-height: 1.6;
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        input, select, textarea {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+        button {
+            background: #007bff;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            margin-right: 10px;
+        }
+        button:hover {
+            background: #0056b3;
+        }
+        .checkbox-group {
+            margin: 10px 0;
+        }
+        .radio-group {
+            margin: 10px 0;
+        }
+        iframe {
+            width: 100%;
+            height: 200px;
+            border: 1px solid #ddd;
+            margin: 20px 0;
+        }
+        .shadow-host {
+            border: 2px solid #007bff;
+            padding: 20px;
+            margin: 20px 0;
+        }
+        .success-message {
+            color: green;
+            font-weight: bold;
+            margin-top: 10px;
+        }
+        .error-message {
+            color: red;
+            font-weight: bold;
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Playwright Recorder Test Page</h1>
+    <p>This page contains various interactive elements to test the extension's recording capabilities.</p>
+
+    <h2>Basic Form Elements</h2>
+    <form id="test-form">
+        <div class="form-group">
+            <label for="username">Username:</label>
+            <input type="text" id="username" name="username" placeholder="Enter username">
+        </div>
+
+        <div class="form-group">
+            <label for="email">Email:</label>
+            <input type="email" id="email" name="email" placeholder="Enter email">
+        </div>
+
+        <div class="form-group">
+            <label for="password">Password:</label>
+            <input type="password" id="password" name="password" placeholder="Enter password">
+        </div>
+
+        <div class="form-group">
+            <label for="country">Country:</label>
+            <select id="country" name="country">
+                <option value="">Select a country</option>
+                <option value="US">United States</option>
+                <option value="CA">Canada</option>
+                <option value="UK">United Kingdom</option>
+                <option value="AU">Australia</option>
+            </select>
+        </div>
+
+        <div class="form-group">
+            <label for="interests">Interests (Multiple):</label>
+            <select id="interests" name="interests" multiple>
+                <option value="reading">Reading</option>
+                <option value="gaming">Gaming</option>
+                <option value="sports">Sports</option>
+                <option value="music">Music</option>
+                <option value="travel">Travel</option>
+            </select>
+        </div>
+
+        <div class="checkbox-group">
+            <label>
+                <input type="checkbox" id="newsletter" name="newsletter">
+                Subscribe to newsletter
+            </label>
+        </div>
+
+        <div class="checkbox-group">
+            <label>
+                <input type="checkbox" id="terms" name="terms">
+                I agree to the terms and conditions
+            </label>
+        </div>
+
+        <div class="radio-group">
+            <label>Gender:</label><br>
+            <label>
+                <input type="radio" name="gender" value="male">
+                Male
+            </label>
+            <label>
+                <input type="radio" name="gender" value="female">
+                Female
+            </label>
+            <label>
+                <input type="radio" name="gender" value="other">
+                Other
+            </label>
+        </div>
+
+        <div class="form-group">
+            <label for="bio">Bio:</label>
+            <textarea id="bio" name="bio" rows="4" placeholder="Tell us about yourself"></textarea>
+        </div>
+
+        <div class="form-group">
+            <label for="profile-picture">Profile Picture:</label>
+            <input type="file" id="profile-picture" name="profile-picture" accept="image/*">
+        </div>
+
+        <button type="submit" id="submit-btn">Submit Form</button>
+        <button type="button" id="reset-btn">Reset Form</button>
+    </form>
+
+    <h2>Interactive Buttons</h2>
+    <button id="click-me">Click Me</button>
+    <button id="double-click-me">Double Click Me</button>
+    <button id="right-click-me">Right Click Me</button>
+    <button id="hover-me">Hover Over Me</button>
+
+    <h2>Navigation Links</h2>
+    <a href="#section1" id="link1">Go to Section 1</a> |
+    <a href="#section2" id="link2">Go to Section 2</a> |
+    <a href="https://example.com" id="external-link" target="_blank">External Link</a>
+
+    <h2>Iframe Test</h2>
+    <iframe name="test-iframe" src="data:text/html,<html><body><h3>Iframe Content</h3><input type='text' id='iframe-input' placeholder='Type in iframe'><button id='iframe-button'>Iframe Button</button></body></html>"></iframe>
+
+    <h2>Shadow DOM Test</h2>
+    <div id="shadow-host" class="shadow-host">
+        <p>This is a shadow DOM host element. Click to see shadow content.</p>
+    </div>
+
+    <h2>Dynamic Content</h2>
+    <button id="add-content">Add Dynamic Content</button>
+    <div id="dynamic-container"></div>
+
+    <h2>Form Validation</h2>
+    <form id="validation-form">
+        <div class="form-group">
+            <label for="required-field">Required Field:</label>
+            <input type="text" id="required-field" name="required-field" required>
+        </div>
+        <button type="submit">Submit with Validation</button>
+    </form>
+
+    <div id="section1">
+        <h3>Section 1</h3>
+        <p>This is section 1 content.</p>
+    </div>
+
+    <div id="section2">
+        <h3>Section 2</h3>
+        <p>This is section 2 content.</p>
+    </div>
+
+    <script>
+        // Shadow DOM creation
+        const shadowHost = document.getElementById('shadow-host');
+        const shadow = shadowHost.attachShadow({ mode: 'open' });
+        shadow.innerHTML = `
+            <style>
+                .shadow-content {
+                    background: #f0f0f0;
+                    padding: 15px;
+                    border-radius: 4px;
+                }
+                .shadow-button {
+                    background: #28a745;
+                    color: white;
+                    padding: 8px 16px;
+                    border: none;
+                    border-radius: 4px;
+                    cursor: pointer;
+                    margin: 5px;
+                }
+                .shadow-input {
+                    width: 100%;
+                    padding: 8px;
+                    border: 1px solid #ddd;
+                    border-radius: 4px;
+                    margin: 5px 0;
+                }
+            </style>
+            <div class="shadow-content">
+                <h4>Shadow DOM Content</h4>
+                <input type="text" class="shadow-input" placeholder="Type in shadow DOM">
+                <select class="shadow-select">
+                    <option value="">Select option</option>
+                    <option value="option1">Option 1</option>
+                    <option value="option2">Option 2</option>
+                </select>
+                <br>
+                <button class="shadow-button">Shadow Button</button>
+                <label>
+                    <input type="checkbox" class="shadow-checkbox">
+                    Shadow Checkbox
+                </label>
+            </div>
+        `;
+
+        // Event listeners
+        document.getElementById('click-me').addEventListener('click', function() {
+            alert('Button clicked!');
+        });
+
+        document.getElementById('double-click-me').addEventListener('dblclick', function() {
+            alert('Button double-clicked!');
+        });
+
+        document.getElementById('right-click-me').addEventListener('contextmenu', function(e) {
+            e.preventDefault();
+            alert('Button right-clicked!');
+        });
+
+        document.getElementById('hover-me').addEventListener('mouseenter', function() {
+            this.style.backgroundColor = '#ffc107';
+        });
+
+        document.getElementById('hover-me').addEventListener('mouseleave', function() {
+            this.style.backgroundColor = '#007bff';
+        });
+
+        document.getElementById('add-content').addEventListener('click', function() {
+            const container = document.getElementById('dynamic-container');
+            const newElement = document.createElement('div');
+            newElement.innerHTML = `
+                <p>Dynamic content added at ${new Date().toLocaleTimeString()}</p>
+                <button class="dynamic-btn">Dynamic Button</button>
+            `;
+            container.appendChild(newElement);
+        });
+
+        document.getElementById('reset-btn').addEventListener('click', function() {
+            document.getElementById('test-form').reset();
+        });
+
+        document.getElementById('test-form').addEventListener('submit', function(e) {
+            e.preventDefault();
+            alert('Form submitted!');
+        });
+
+        document.getElementById('validation-form').addEventListener('submit', function(e) {
+            const requiredField = document.getElementById('required-field');
+            if (!requiredField.value.trim()) {
+                e.preventDefault();
+                alert('Required field must be filled!');
+            } else {
+                alert('Validation form submitted!');
+            }
+        });
+
+        // Shadow DOM event listeners
+        shadow.querySelector('.shadow-button').addEventListener('click', function() {
+            alert('Shadow DOM button clicked!');
+        });
+
+        // Iframe communication (for testing)
+        window.addEventListener('message', function(event) {
+            if (event.data.type === 'iframe-action') {
+                console.log('Iframe action received:', event.data);
+            }
+        });
+
+        console.log('Test page loaded successfully!');
+    </script>
+</body>
+</html> 

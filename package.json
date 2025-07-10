@@ -1,0 +1,31 @@
+{
+  "name": "playwright-recorder-extension",
+  "version": "1.0.0",
+  "description": "A Chrome extension that records user interactions and generates Playwright test scripts",
+  "main": "background.js",
+  "scripts": {
+    "build": "echo 'No build process needed for Chrome extension'",
+    "test": "echo 'No tests specified'",
+    "lint": "echo 'No linter configured'"
+  },
+  "keywords": [
+    "playwright",
+    "testing",
+    "automation",
+    "chrome-extension",
+    "test-recorder",
+    "selenium-alternative"
+  ],
+  "author": "Your Name",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/yourusername/playwright-recorder-extension.git"
+  },
+  "bugs": {
+    "url": "https://github.com/yourusername/playwright-recorder-extension/issues"
+  },
+  "homepage": "https://github.com/yourusername/playwright-recorder-extension#readme",
+  "devDependencies": {},
+  "dependencies": {}
+} 
