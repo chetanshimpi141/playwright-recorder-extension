@@ -12,80 +12,72 @@ let connectionRetryInterval = null;
 let lastSuccessfulConnection = 0;
 let forceReconnectInterval = null;
 
-// Function to generate unique selectors for elements with enhanced logic
+// Enhanced selector generator for robust Playwright locators
 function generateSelector(element) {
-  // Priority 1: ID selector (most reliable)
-  if (element.id && element.id.trim()) {
-    return `#${element.id}`;
-  }
-  
-  // Priority 2: Data attributes (testing best practices)
-  const dataAttributes = ['data-testid', 'data-cy', 'data-test', 'data-automation', 'data-qa'];
-  for (const attr of dataAttributes) {
+  // 1. getByTestId
+  const testIdAttrs = ['data-testid', 'data-test', 'data-qa', 'data-cy'];
+  for (const attr of testIdAttrs) {
     const value = element.getAttribute(attr);
     if (value && value.trim()) {
-      return `[${attr}="${value}"]`;
+      return { type: 'getByTestId', value, attr };
     }
   }
-  
-  // Priority 3: Name attribute (good for forms)
-  if (element.name && element.name.trim()) {
-    return `[name="${element.name}"]`;
+
+  // 2. getByRole (with accessible name)
+  if (element.getAttribute) {
+    const role = element.getAttribute('role');
+    let name = '';
+    if (element.ariaLabel) name = element.ariaLabel;
+    else if (element.getAttribute('aria-label')) name = element.getAttribute('aria-label');
+    else if (element.textContent && element.textContent.trim().length < 50) name = element.textContent.trim();
+    if (role && name) {
+      return { type: 'getByRole', value: role, name };
+    }
   }
-  
-  // Priority 4: Aria labels (accessibility)
-  const ariaLabel = element.getAttribute('aria-label');
-  if (ariaLabel && ariaLabel.trim()) {
-    return `[aria-label="${ariaLabel}"]`;
+
+  // 3. getByLabel (for form fields)
+  if (element.labels && element.labels.length > 0) {
+    const label = element.labels[0].textContent.trim();
+    if (label) {
+      return { type: 'getByLabel', value: label };
+    }
   }
-  
-  // Priority 5: Placeholder text (for inputs)
+
+  // 4. getByPlaceholder
   if (element.placeholder && element.placeholder.trim()) {
-    return `[placeholder="${element.placeholder}"]`;
+    return { type: 'getByPlaceholder', value: element.placeholder };
   }
-  
-  // Priority 6: Alt text (for images)
-  if (element.alt && element.alt.trim()) {
-    return `[alt="${element.alt}"]`;
+
+  // 5. getByAltText (for images)
+  if (element.tagName === 'IMG' && element.alt && element.alt.trim()) {
+    return { type: 'getByAltText', value: element.alt };
   }
-  
-  // Priority 7: Title attribute
+
+  // 6. getByTitle
   if (element.title && element.title.trim()) {
-    return `[title="${element.title}"]`;
+    return { type: 'getByTitle', value: element.title };
   }
-  
-  // Priority 8: Class-based selector (with filtering)
+
+  // 7. Unique ID
+  if (element.id && element.id.trim() && document.querySelectorAll(`#${CSS.escape(element.id)}`).length === 1) {
+    return { type: 'id', value: `#${element.id}` };
+  }
+
+  // 8. Name attribute (for form fields)
+  if (element.name && element.name.trim()) {
+    return { type: 'name', value: element.name };
+  }
+
+  // 9. Fallback: class, attributes, nth-child
   if (element.className && typeof element.className === 'string') {
-    const classes = element.className.split(' ')
-      .filter(c => c.trim() && !c.startsWith('js-') && !c.startsWith('ng-') && !c.startsWith('react-'))
-      .slice(0, 3); // Limit to 3 classes to avoid overly specific selectors
-    
-    if (classes.length > 0) {
-      return `.${classes.join('.')}`;
+    const classValue = element.className.trim().replace(/\s+/g, ' ');
+    if (classValue) {
+      return { type: 'class-attr', value: `[class=\"${classValue}\"]` };
     }
   }
-  
-  // Priority 9: Text content for buttons and links
-  if ((element.tagName === 'BUTTON' || element.tagName === 'A') && element.textContent) {
-    const text = element.textContent.trim();
-    if (text.length > 0 && text.length < 50) {
-      return `${element.tagName.toLowerCase()}:has-text("${text}")`;
-    }
-  }
-  
-  // Priority 10: Role attribute
-  const role = element.getAttribute('role');
-  if (role && role.trim()) {
-    return `[role="${role}"]`;
-  }
-  
-  // Priority 11: Type attribute for inputs
-  if (element.type && element.type.trim()) {
-    return `input[type="${element.type}"]`;
-  }
-  
-  // Priority 12: Generate a path-based selector as fallback
-  return generatePathSelector(element);
+
+  // Fallback: path-based selector
+  return { type: 'css', value: generatePathSelector(element) };
 }
 
 // Enhanced path-based selector generation
@@ -540,6 +532,9 @@ function cleanActionData(actionData) {
   delete actionData.originalEvent;
 }
 
+// Debounce map for typing
+const typingDebounceMap = new Map();
+
 // Event listeners for different user interactions
 function setupEventListeners() {
   // Enhanced click events with action type detection
@@ -615,28 +610,30 @@ function setupEventListeners() {
     });
   }, true);
   
-  // Enhanced input events with better handling
+  // Enhanced input/typing events with debounce
   document.addEventListener('input', function(event) {
     if (!isRecording) return;
-    
     const target = event.target;
-    const selector = generateSelector(target);
-    
-    // Debounce input events
-    clearTimeout(target.inputTimeout);
-    target.inputTimeout = setTimeout(() => {
-      const value = getElementValue(target);
-      const actionType = target.type === 'file' ? 'upload' : 'type';
-      
-      recordAction({
-        type: actionType,
-        selector: selector,
-        value: value,
-        tagName: target.tagName.toLowerCase(),
-        inputType: target.type,
-        checked: target.type === 'checkbox' ? target.checked : undefined
-      });
-    }, 500);
+    if (!target || !(target.tagName === 'INPUT' || target.tagName === 'TEXTAREA')) return;
+    if (target.closest('.playwright-recorder-overlay')) return;
+
+    const selectorObj = generateSelector(target);
+    const value = getElementValue(target);
+    const debounceKey = selectorObj.value + ':' + (selectorObj.type || 'css');
+    clearTimeout(typingDebounceMap.get(debounceKey));
+    typingDebounceMap.set(debounceKey, setTimeout(() => {
+      // Only record if value changed
+      if (target._lastRecordedValue !== value) {
+        recordAction({
+          type: 'type',
+          selector: selectorObj,
+          tagName: target.tagName.toLowerCase(),
+          value: value,
+          element: target
+        });
+        target._lastRecordedValue = value;
+      }
+    }, 2000)); // 2s debounce
   }, true);
   
   // Focus events for better tracking
@@ -1028,6 +1025,9 @@ function handleWindowBlur() {
 
 // Listen for messages from background script
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
+  console.log('=== CONTENT SCRIPT: MESSAGE RECEIVED ===');
+  console.log('Message:', request);
+  
   // Check if extension context is still valid
   if (!chrome.runtime || !chrome.runtime.id) {
     console.warn('Extension context invalidated, cannot process message');
@@ -1039,34 +1039,39 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
   try {
     switch (request.action) {
       case 'startRecording':
-        console.log('Starting recording...');
+        console.log('=== CONTENT SCRIPT: STARTING RECORDING ===');
         isRecording = true;
         currentUrl = window.location.href;
+        console.log('Recording state set:', { isRecording, currentUrl });
         showRecordingIndicator();
         
         // Record initial page load
+        console.log('Recording initial navigation...');
         recordAction({
           type: 'navigate',
           url: currentUrl,
           previousUrl: ''
         });
         
+        console.log('Sending success response to background');
         sendResponse({ success: true });
         break;
         
       case 'stopRecording':
-        console.log('Stopping recording...');
+        console.log('=== CONTENT SCRIPT: STOPPING RECORDING ===');
         isRecording = false;
         hideRecordingIndicator();
         sendResponse({ success: true });
         break;
         
       case 'getRecordingStatus':
+        console.log('Content script status check:', { isRecording });
         sendResponse({ isRecording: isRecording });
         break;
         
       case 'ping':
         // Simple ping to check if content script is alive
+        console.log('Content script ping received');
         sendResponse({ success: true, isRecording: isRecording });
         break;
         

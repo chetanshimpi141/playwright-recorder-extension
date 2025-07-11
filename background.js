@@ -11,6 +11,14 @@ let recordingPersistenceInterval = null;
 let downloadRetryCount = 0;
 let maxDownloadRetries = 3;
 
+function updateStorage() {
+  // TODO: implement storage update if needed
+}
+
+function loadRecordingState() {
+  // TODO: implement loading of recording state from storage if needed
+}
+
 // Load recording state from storage on startup
 chrome.runtime.onStartup.addListener(() => {
   loadRecordingState();
@@ -125,6 +133,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
 });
 
 function startRecording(fileName, language) {
+  console.log('=== START RECORDING ===');
   console.log('Starting recording for:', fileName, 'language:', language);
   
   isRecording = true;
@@ -134,32 +143,52 @@ function startRecording(fileName, language) {
   currentLanguage = language;
   recordingStartTime = Date.now();
   
+  console.log('Recording state set:', { isRecording, fileName, language });
   updateStorage();
   
   // Get current tab and store its ID
   chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
+    console.log('Found tabs:', tabs);
     if (tabs[0]) {
       currentTabId = tabs[0].id;
+      const tabUrl = tabs[0].url || '';
+      console.log('Current tab:', { id: currentTabId, url: tabUrl });
+      
+      if (!tabUrl.startsWith('http://') && !tabUrl.startsWith('https://')) {
+        console.warn('Cannot inject content script into non-web page:', tabUrl);
+        chrome.runtime.sendMessage({
+          action: 'recordingError',
+          message: 'Recording is only supported on regular web pages (http/https). This page is not supported.'
+        });
+        return;
+      }
       console.log('Recording in tab:', currentTabId);
       
       // Inject content script to start recording
+      console.log('Sending startRecording message to content script...');
       chrome.tabs.sendMessage(tabs[0].id, {
         action: 'startRecording'
       }, (response) => {
+        console.log('Content script response:', response);
         if (chrome.runtime.lastError) {
           console.warn('Failed to start recording in content script:', chrome.runtime.lastError);
           // Try to inject content script if it's not loaded
+          console.log('Attempting to inject content script...');
           chrome.scripting.executeScript({
             target: { tabId: tabs[0].id },
             files: ['content.js']
           }, () => {
+            console.log('Content script injection completed');
             // Retry sending message after injection
             setTimeout(() => {
+              console.log('Retrying startRecording message...');
               chrome.tabs.sendMessage(tabs[0].id, {
                 action: 'startRecording'
               }, (retryResponse) => {
+                console.log('Retry response:', retryResponse);
                 if (chrome.runtime.lastError) {
                   console.error('Failed to start recording after injection:', chrome.runtime.lastError);
+                  isRecording = false; // Stop recording if we can't communicate
                 } else {
                   console.log('Recording started successfully after injection');
                 }
@@ -172,12 +201,16 @@ function startRecording(fileName, language) {
       });
       
       // Start heartbeat to maintain recording state
+      console.log('Starting heartbeat...');
       startHeartbeat();
       startRecordingPersistence();
+    } else {
+      console.error('No active tab found');
+      isRecording = false;
     }
   });
   
-  console.log('Recording started for file:', fileName, 'in language:', language);
+  console.log('=== END START RECORDING ===');
 }
 
 function startHeartbeat() {
@@ -380,137 +413,170 @@ function generatePlaywrightCode(actions, language) {
   return code;
 }
 
+function playwrightLocatorCode(selectorObj, framePrefix = 'page.') {
+  switch (selectorObj.type) {
+    case 'id':
+      return `${framePrefix}locator('${selectorObj.value}')`;
+    case 'getByRole':
+      return `${framePrefix}getByRole('${selectorObj.value}', { name: '${selectorObj.name}' })`;
+    case 'getByLabel':
+      return `${framePrefix}getByLabel('${selectorObj.value}')`;
+    case 'getByPlaceholder':
+      return `${framePrefix}getByPlaceholder('${selectorObj.value}')`;
+    case 'getByAltText':
+      return `${framePrefix}getByAltText('${selectorObj.value}')`;
+    case 'getByTitle':
+      return `${framePrefix}getByTitle('${selectorObj.value}')`;
+    case 'getByTestId':
+      return `${framePrefix}getByTestId('${selectorObj.value}')`;
+    case 'class-attr':
+      return `${framePrefix}locator('${selectorObj.value}')`;
+    case 'name':
+      return `${framePrefix}locator('[name="${selectorObj.value}"]')`;
+    case 'class':
+      return `${framePrefix}locator('${selectorObj.value}')`;
+    case 'css':
+    default:
+      return `${framePrefix}locator('${selectorObj.value}')`;
+  }
+}
+
 function generateJavaScriptCode(actions) {
-  // Filter and clean actions
-  const cleanedActions = cleanActionsForCode(actions);
-  
-  let code = `const { test, expect } = require('@playwright/test');
+  // Remove hover actions
+  const filteredActions = actions.filter(a => a.type !== 'hover');
 
-test('Recorded Test - ${currentFileName}', async ({ page }) => {
-  // Navigate to the starting URL
-  await page.goto('${cleanedActions[0]?.url || 'https://example.com'}');
-  
-`;
+  // Find the first navigation action
+  const firstNavIdx = filteredActions.findIndex(a => a.type === 'navigate');
+  let actionsToUse = filteredActions;
+  if (firstNavIdx !== -1) {
+    // Only include actions from the first navigation onwards
+    actionsToUse = filteredActions.slice(firstNavIdx);
+  }
 
-  cleanedActions.forEach((action, index) => {
-    // Handle frame context
-    const framePrefix = generateFramePrefix(action.framePath);
-    
+  let code = `import { test, expect } from '@playwright/test';\n\n`;
+  code += `test('Recorded Test - ${currentFileName}', async ({ page }) => {\n`;
+
+  let stepBuffer = [];
+  let stepDescription = '';
+  let lastNavigatedUrl = null;
+  const seenNavigations = new Set();
+
+  // Helper to flush the current step buffer
+  function flushStep() {
+    if (stepBuffer.length > 0 && stepDescription) {
+      code += `  await test.step(${JSON.stringify(stepDescription)}, async () => {\n`;
+      code += stepBuffer.join('');
+      code += `  });\n\n`;
+      stepBuffer = [];
+      stepDescription = '';
+    }
+  }
+
+  for (let i = 0; i < actionsToUse.length; i++) {
+    const action = actionsToUse[i];
+    // Only insert navigation if it's a new URL
+    if (action.type === 'navigate' && !seenNavigations.has(action.url)) {
+      flushStep();
+      stepDescription = `Go to ${action.url}`;
+      stepBuffer.push(`    await page.goto('${action.url}');\n`);
+      stepBuffer.push(`    await page.waitForTimeout(3000);\n`);
+      lastNavigatedUrl = action.url;
+      seenNavigations.add(action.url);
+      flushStep();
+      continue;
+    }
+    // Skip duplicate navigation
+    if (action.type === 'navigate') {
+      continue;
+    }
+    // Group actions under the last navigation
+    let description = '';
     switch (action.type) {
       case 'click':
-        code += `  // Click on ${action.selector}\n`;
-        code += `  await ${framePrefix}click('${action.selector}');\n\n`;
-        break;
-      case 'doubleClick':
-        code += `  // Double-click on ${action.selector}\n`;
-        code += `  await ${framePrefix}dblclick('${action.selector}');\n\n`;
-        break;
-      case 'rightClick':
-        code += `  // Right-click on ${action.selector}\n`;
-        code += `  await ${framePrefix}click('${action.selector}', { button: 'right' });\n\n`;
+        description = `Click on ${action.selector?.value || action.selector}`;
         break;
       case 'type':
-        code += `  // Type in ${action.selector}\n`;
-        code += `  await ${framePrefix}fill('${action.selector}', '${action.value || ''}');\n\n`;
+        description = `Type in ${action.selector?.value || action.selector}`;
+        break;
+      case 'select':
+        description = `Select option in ${action.selector?.value || action.selector}`;
+        break;
+      case 'check':
+        description = `Check ${action.selector?.value || action.selector}`;
+        break;
+      case 'upload':
+        description = `Upload file to ${action.selector?.value || action.selector}`;
+        break;
+      case 'submit':
+        description = `Submit form ${action.selector?.value || action.selector}`;
+        break;
+      default:
+        description = `${action.type} on ${action.selector?.value || action.selector}`;
+    }
+    if (!stepDescription) stepDescription = description;
+
+    // Generate Playwright code for the action
+    let line = '';
+    const framePrefix = generateFramePrefix(action.framePath);
+    // Prioritize unique ID over getByTestId
+    let selectorObj = action.selector || { type: 'css', value: action.selector };
+    if (action.selector && action.selector.type === 'getByTestId') {
+      // If a unique ID is available, use it instead
+      if (action.elementId && action.elementId.trim()) {
+        selectorObj = { type: 'id', value: `#${action.elementId}` };
+      }
+    }
+    switch (action.type) {
+      case 'click':
+        line = `    await ${playwrightLocatorCode(selectorObj, framePrefix)}.click({ force: true });\n`;
+        break;
+      case 'type':
+        line = `    await ${playwrightLocatorCode(selectorObj, framePrefix)}.fill('${action.value || ''}');\n`;
+        line += `    await page.waitForTimeout(3000);\n`;
+        break;
+      case 'select':
+        line = `    await ${playwrightLocatorCode(selectorObj, framePrefix)}.selectOption('${action.value || ''}');\n`;
         break;
       case 'check':
         if (action.inputType === 'checkbox') {
           if (action.checked) {
-            code += `  // Check checkbox ${action.selector}\n`;
-            code += `  await ${framePrefix}check('${action.selector}');\n\n`;
+            line = `    await ${playwrightLocatorCode(selectorObj, framePrefix)}.check();\n`;
           } else {
-            code += `  // Uncheck checkbox ${action.selector}\n`;
-            code += `  await ${framePrefix}uncheck('${action.selector}');\n\n`;
+            line = `    await ${playwrightLocatorCode(selectorObj, framePrefix)}.uncheck();\n`;
           }
         } else if (action.inputType === 'radio') {
-          code += `  // Select radio button ${action.selector}\n`;
-          code += `  await ${framePrefix}check('${action.selector}');\n\n`;
-        }
-        break;
-      case 'select':
-        if (action.multiple) {
-          code += `  // Select multiple options in ${action.selector}\n`;
-          code += `  await ${framePrefix}selectOption('${action.selector}', ${JSON.stringify(action.value)});\n\n`;
-        } else {
-          code += `  // Select option in ${action.selector}\n`;
-          code += `  await ${framePrefix}selectOption('${action.selector}', '${action.value || ''}');\n\n`;
+          line = `    await ${playwrightLocatorCode(selectorObj, framePrefix)}.check();\n`;
         }
         break;
       case 'upload':
-        code += `  // Upload file to ${action.selector}\n`;
-        code += `  await ${framePrefix}setInputFiles('${action.selector}', 'path/to/your/file');\n\n`;
+        line = `    await ${playwrightLocatorCode(selectorObj, framePrefix)}.setInputFiles('path/to/your/file');\n`;
         break;
-      case 'navigate':
-        // Only add navigation if URL is different from current page
-        if (index === 0 || action.url !== cleanedActions[index - 1]?.url) {
-          code += `  // Navigate to ${action.url}\n`;
-          code += `  await page.goto('${action.url}');\n\n`;
-        }
-        break;
-      case 'hover':
-        // Only add hover for elements with tooltips or important interactions
-        if (action.hasTooltip || action.isImportant) {
-          code += `  // Hover over ${action.selector}\n`;
-          code += `  await ${framePrefix}hover('${action.selector}');\n\n`;
-        }
-        break;
-      case 'focus':
-        // Only add focus for form elements
-        if (['input', 'textarea', 'select'].includes(action.elementType)) {
-          code += `  // Focus on ${action.selector}\n`;
-          code += `  await ${framePrefix}focus('${action.selector}');\n\n`;
-        }
-        break;
-      case 'blur':
-        // Only add blur for form elements
-        if (['input', 'textarea', 'select'].includes(action.elementType)) {
-          code += `  // Blur from ${action.selector}\n`;
-          code += `  await ${framePrefix}evaluate(() => document.querySelector('${action.selector}').blur());\n\n`;
-        }
-        break;
-      case 'wait':
-        code += `  // Wait for ${action.selector}\n`;
-        code += `  await ${framePrefix}waitForSelector('${action.selector}');\n\n`;
+      case 'submit':
+        line = `    await ${playwrightLocatorCode(selectorObj, framePrefix)}.locator('button[type=\"submit\"]').click({ force: true });\n`;
         break;
       case 'keypress':
-        // Handle keyboard shortcuts and important keys
         if (action.key) {
-          const keyDescription = getKeyDescription(action.key, action.modifiers);
-          code += `  // ${keyDescription}\n`;
-          if (action.selector && action.selector !== 'body') {
-            code += `  await ${framePrefix}press('${action.selector}', '${action.key}');\n\n`;
+          if (action.selector && action.selector.value && action.selector.value !== 'body') {
+            line = `    await ${playwrightLocatorCode(selectorObj, framePrefix)}.press('${action.key}');\n`;
           } else {
-            code += `  await page.keyboard.press('${action.key}');\n\n`;
+            line = `    await page.keyboard.press('${action.key}');\n`;
           }
         }
         break;
       case 'scroll':
-        // Only add significant scroll events
-        if (action.scrollDiff > 100) {
-          code += `  // Scroll to position (${action.scrollX}, ${action.scrollY})\n`;
-          code += `  await ${framePrefix}evaluate(() => window.scrollTo(${action.scrollX}, ${action.scrollY}));\n\n`;
-        }
+        line = `    await ${framePrefix}evaluate(() => window.scrollTo(${action.scrollX}, ${action.scrollY}));\n`;
         break;
-      case 'dragStart':
-        code += `  // Start dragging ${action.selector}\n`;
-        code += `  await ${framePrefix}dragAndDrop('${action.selector}', '${action.selector}');\n\n`;
-        break;
-      case 'drop':
-        code += `  // Drop on ${action.selector}\n`;
-        code += `  // Note: Drag and drop requires source and target selectors\n\n`;
-        break;
-      case 'submit':
-        code += `  // Submit form ${action.selector}\n`;
-        code += `  await ${framePrefix}click('${action.selector} button[type="submit"]');\n\n`;
-        break;
+      // Add more cases as needed
     }
-  });
-  
-  code += `  // Add your assertions here
-  // await expect(page.locator('selector')).toBeVisible();
-});
-`;
-  
+    // If the next action is a navigation to a new URL, insert a wait after this action
+    const nextAction = actionsToUse[i + 1];
+    if (nextAction && nextAction.type === 'navigate' && nextAction.url !== lastNavigatedUrl) {
+      line += `    await page.waitForTimeout(3000);\n`;
+    }
+    stepBuffer.push(line);
+  }
+  flushStep();
+  code += `});\n`;
   return code;
 }
 
@@ -925,20 +991,19 @@ public class ${currentFileName.replace('-', '_').replace(/[^a-zA-Z0-9_]/g, '')}T
         code += `            ${framePrefix}evaluate("document.querySelector('${action.selector}').blur()");\n\n`;
         break;
       case 'wait':
-        code += `            // Wait for ${action.selector}\n`;
-        code += `            ${framePrefix}waitForSelector("${action.selector}");\n\n`;
+        // No-op for wait
         break;
       case 'keypress':
         code += `            // Press key ${action.key} on ${action.selector}\n`;
-        code += `            ${framePrefix}press("${action.selector}", "${action.key}");\n\n`;
+        code += `            ${framePrefix}press('${action.selector}', '${action.key}');\n\n`;
         break;
       case 'scroll':
         code += `            // Scroll to position (${action.scrollX}, ${action.scrollY})\n`;
-        code += `            ${framePrefix}evaluate("window.scrollTo(${action.scrollX}, ${action.scrollY})");\n\n`;
+        code += `            ${framePrefix}evaluate(f"window.scrollTo({action.scrollX}, {action.scrollY})")\n\n`;
         break;
       case 'dragStart':
         code += `            // Start dragging ${action.selector}\n`;
-        code += `            ${framePrefix}dragAndDrop("${action.selector}", "${action.selector}");\n\n`;
+        code += `            ${framePrefix}drag_and_drop('${action.selector}', '${action.selector}')\n\n`;
         break;
       case 'drop':
         code += `            // Drop on ${action.selector}\n`;
@@ -946,18 +1011,16 @@ public class ${currentFileName.replace('-', '_').replace(/[^a-zA-Z0-9_]/g, '')}T
         break;
       case 'submit':
         code += `            // Submit form ${action.selector}\n`;
-        code += `            ${framePrefix}click("${action.selector} button[type=\"submit\"]");\n\n`;
+        code += `            ${framePrefix}click('${action.selector} button[type="submit"]')\n\n`;
         break;
     }
   });
   
   code += `            // Add your assertions here
-            // page.locator("selector").shouldBeVisible();
+            // await expect(page.locator('selector')).to_be_visible()
             
-            browser.close();
-        }
-    }
-}`;
+            browser.close()
+`;
   
   return code;
 }
@@ -972,163 +1035,11 @@ function generateJavaFramePrefix(framePath) {
   
   framePath.forEach((frame, index) => {
     if (frame.type === 'iframe') {
-      prefix += `frameLocator("${frame.selector}").`;
+      prefix += `frameLocator('${frame.selector}').`;
     } else if (frame.type === 'shadow') {
-      prefix += `locator("${frame.selector}").shadowRoot().`;
+      prefix += `locator('${frame.selector}').shadowRoot.`;
     }
   });
   
   return prefix;
 }
-
-// Listen for tab events
-chrome.tabs.onRemoved.addListener((tabId) => {
-  if (tabId === currentTabId && isRecording) {
-    console.log('Recording tab was closed, stopping recording');
-    stopRecording();
-  }
-});
-
-chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
-  if (tabId === currentTabId && isRecording) {
-    console.log('Tab updated:', changeInfo.status);
-    
-    if (changeInfo.status === 'complete') {
-      // Tab finished loading, check if content script is still connected
-      setTimeout(() => {
-        try {
-          chrome.tabs.sendMessage(tabId, { action: 'ping' }, (response) => {
-            if (chrome.runtime.lastError) {
-              console.warn('Content script not responding, attempting to reconnect');
-              // Try to inject content script again
-              chrome.scripting.executeScript({
-                target: { tabId: tabId },
-                files: ['content.js']
-              }, () => {
-                setTimeout(() => {
-                  try {
-                    chrome.tabs.sendMessage(tabId, { action: 'startRecording' }, (retryResponse) => {
-                      if (chrome.runtime.lastError) {
-                        console.error('Failed to reconnect after injection');
-                      } else {
-                        console.log('Successfully reconnected after injection');
-                      }
-                    });
-                  } catch (error) {
-                    console.error('Error sending startRecording message:', error);
-                  }
-                }, 200);
-              });
-            } else {
-              // Content script is responding, ensure it knows about recording state
-              try {
-                chrome.tabs.sendMessage(tabId, { action: 'forceReconnect' });
-              } catch (error) {
-                console.error('Error sending forceReconnect message:', error);
-              }
-            }
-          });
-        } catch (error) {
-          console.error('Error in tab update handler:', error);
-        }
-      }, 300);
-    }
-  }
-});
-
-// Listen for tab activation to ensure recording state is maintained
-chrome.tabs.onActivated.addListener((activeInfo) => {
-  if (activeInfo.tabId === currentTabId && isRecording) {
-    console.log('Recording tab activated, ensuring recording state');
-    setTimeout(() => {
-      try {
-        chrome.tabs.sendMessage(activeInfo.tabId, { action: 'forceReconnect' }, (response) => {
-          if (chrome.runtime.lastError) {
-            console.warn('Failed to reconnect on tab activation');
-          }
-        });
-      } catch (error) {
-        console.error('Error in tab activation handler:', error);
-      }
-    }, 100);
-  }
-});
-
-// Listen for window focus changes
-chrome.windows.onFocusChanged.addListener((windowId) => {
-  if (windowId !== chrome.windows.WINDOW_ID_NONE && isRecording && currentTabId) {
-    console.log('Window focused, checking recording state');
-    setTimeout(() => {
-      try {
-        chrome.tabs.sendMessage(currentTabId, { action: 'forceReconnect' });
-      } catch (error) {
-        console.error('Error in window focus handler:', error);
-      }
-    }, 100);
-  }
-});
-
-function updateStorage() {
-  chrome.storage.local.set({
-    isRecording: isRecording,
-    recordedActions: recordedActions,
-    currentFileName: currentFileName,
-    currentLanguage: currentLanguage,
-    actionCount: actionCount,
-    currentTabId: currentTabId,
-    recordingStartTime: recordingStartTime
-  });
-}
-
-// Load recording state on extension startup and when storage changes
-function loadRecordingState() {
-  chrome.storage.local.get([
-    'isRecording', 
-    'recordedActions', 
-    'currentFileName', 
-    'currentLanguage', 
-    'actionCount',
-    'currentTabId',
-    'recordingStartTime'
-  ], (result) => {
-    if (result.isRecording) {
-      isRecording = result.isRecording;
-      recordedActions = result.recordedActions || [];
-      currentFileName = result.currentFileName || '';
-      currentLanguage = result.currentLanguage || 'javascript';
-      actionCount = result.actionCount || 0;
-      currentTabId = result.currentTabId;
-      recordingStartTime = result.recordingStartTime;
-      
-      console.log('Recording state restored from storage');
-      
-      // If we have a current tab, try to reconnect
-      if (currentTabId && isRecording) {
-        setTimeout(() => {
-          chrome.tabs.sendMessage(currentTabId, { action: 'forceReconnect' }, (response) => {
-            if (chrome.runtime.lastError) {
-              console.warn('Failed to reconnect to content script, tab may be closed');
-              // Reset recording state if tab is not available
-              isRecording = false;
-              currentTabId = null;
-              updateStorage();
-            }
-          });
-        }, 1000);
-      }
-    }
-  });
-}
-
-// Listen for storage changes
-chrome.storage.onChanged.addListener((changes, namespace) => {
-  if (namespace === 'local' && changes.isRecording) {
-    console.log('Recording state changed in storage:', changes.isRecording.newValue);
-    if (changes.isRecording.newValue && currentTabId) {
-      // Recording was started, ensure content script knows about it
-      setTimeout(() => {
-        chrome.tabs.sendMessage(currentTabId, { action: 'forceReconnect' });
-      }, 100);
-    }
-  }
-}); 

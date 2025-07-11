@@ -23,20 +23,32 @@ document.addEventListener('DOMContentLoaded', function() {
   });
 
   startBtn.addEventListener('click', function() {
+    console.log('=== POPUP: START BUTTON CLICKED ===');
     const fileName = filename.value.trim() || 'recorded-test';
     const selectedLanguage = language.value;
+    
+    console.log('Popup sending request:', { action: 'startRecording', fileName, language: selectedLanguage });
     
     chrome.runtime.sendMessage({
       action: 'startRecording',
       fileName: fileName,
       language: selectedLanguage
     }, function(response) {
-      if (response.success) {
+      console.log('Popup received response:', response);
+      if (chrome.runtime.lastError) {
+        console.error('Popup runtime error:', chrome.runtime.lastError);
+        alert('Failed to start recording: ' + chrome.runtime.lastError.message);
+        return;
+      }
+      
+      if (response && response.success) {
+        console.log('Recording started successfully from popup');
         updateUI(true, 0);
         // Close popup after starting
         window.close();
       } else {
-        alert('Failed to start recording: ' + response.error);
+        console.error('Failed to start recording:', response);
+        alert('Failed to start recording: ' + (response ? response.error : 'Unknown error'));
       }
     });
   });
