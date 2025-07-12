@@ -10,6 +10,28 @@ let heartbeatInterval = null;
 let recordingPersistenceInterval = null;
 let downloadRetryCount = 0;
 let maxDownloadRetries = 3;
+let initialPageUrl = null; // Store the initial page URL when recording starts
+
+// AI-powered code generation configuration
+const AI_CONFIG = {
+  enabled: true,
+  apiEndpoint: 'https://api.openai.com/v1/chat/completions', // Can be changed to other AI providers
+  model: 'gpt-4',
+  maxTokens: 4000,
+  temperature: 0.3
+};
+
+// AI API key (should be stored securely in production)
+let aiApiKey = null;
+
+// Load AI configuration on startup
+chrome.storage.sync.get(['aiEnabled', 'aiApiKey', 'aiModel'], function(result) {
+  if (result.aiEnabled && result.aiApiKey) {
+    aiApiKey = result.aiApiKey;
+    AI_CONFIG.model = result.aiModel || 'gpt-4';
+    console.log('AI configuration loaded');
+  }
+});
 
 function updateStorage() {
   // TODO: implement storage update if needed
@@ -35,12 +57,21 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
   try {
     switch (request.action) {
       case 'startRecording':
-        startRecording(request.fileName, request.language);
-        sendResponse({ 
-          success: true, 
-          actionCount: actionCount,
-          fileName: currentFileName
-        });
+        try {
+          startRecording(request.fileName, request.language);
+          // Send immediate response to popup
+          sendResponse({ 
+            success: true, 
+            actionCount: actionCount,
+            fileName: currentFileName
+          });
+        } catch (error) {
+          console.error('Error starting recording:', error);
+          sendResponse({ 
+            success: false, 
+            error: error.message 
+          });
+        }
         break;
         
       case 'stopRecording':
@@ -54,11 +85,21 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
         break;
         
       case 'generateScript':
-        generateScriptFromActions(request.actions, request.fileName, request.language);
-        sendResponse({ 
-          success: true, 
-          fileName: `${request.fileName}.spec.js`
-        });
+        generateScriptFromActions(request.actions, request.fileName, request.language)
+          .then(() => {
+            sendResponse({ 
+              success: true, 
+              fileName: `${request.fileName}.spec.js`
+            });
+          })
+          .catch(error => {
+            console.error('Script generation failed:', error);
+            sendResponse({ 
+              success: false, 
+              error: error.message 
+            });
+          });
+        return true; // Keep message channel open for async response
         break;
         
       case 'recordAction':
@@ -88,6 +129,13 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
           fileName: currentFileName,
           language: currentLanguage
         });
+        break;
+        
+      case 'validateAI':
+        validateAIConnection(request.apiKey, request.model)
+          .then(result => sendResponse(result))
+          .catch(error => sendResponse({ success: false, error: error.message }));
+        return true; // Keep message channel open for async response
         break;
         
       case 'pageUnloading':
@@ -152,6 +200,7 @@ function startRecording(fileName, language) {
     if (tabs[0]) {
       currentTabId = tabs[0].id;
       const tabUrl = tabs[0].url || '';
+      initialPageUrl = tabUrl; // Store the initial page URL
       console.log('Current tab:', { id: currentTabId, url: tabUrl });
       
       if (!tabUrl.startsWith('http://') && !tabUrl.startsWith('https://')) {
@@ -302,22 +351,39 @@ function stopRecording() {
   // Reset tab tracking
   currentTabId = null;
   recordingStartTime = null;
+  initialPageUrl = null; // Reset initial page URL
 }
 
-function generateTestFile() {
+async function generateTestFile() {
   console.log('Generating test file with', recordedActions.length, 'actions');
-  const testCode = generatePlaywrightCode(recordedActions, currentLanguage);
-  const fileName = `${currentFileName}.spec.js`;
-  
-  downloadFile(testCode, fileName);
+  try {
+    const testCode = await generatePlaywrightCode(recordedActions, currentLanguage);
+    const fileName = `${currentFileName}.spec.js`;
+    
+    downloadFile(testCode, fileName);
+  } catch (error) {
+    console.error('Error generating test file:', error);
+    // Fallback to traditional generation
+    const testCode = generateTraditionalCode(recordedActions, currentLanguage);
+    const fileName = `${currentFileName}.spec.js`;
+    downloadFile(testCode, fileName);
+  }
 }
 
-function generateScriptFromActions(actions, fileName, language) {
+async function generateScriptFromActions(actions, fileName, language) {
   console.log('Generating script from', actions.length, 'actions');
-  const testCode = generatePlaywrightCode(actions, language);
-  const fullFileName = `${fileName}.spec.js`;
-  
-  downloadFile(testCode, fullFileName);
+  try {
+    const testCode = await generatePlaywrightCode(actions, language);
+    const fullFileName = `${fileName}.spec.js`;
+    
+    downloadFile(testCode, fullFileName);
+  } catch (error) {
+    console.error('Error generating script:', error);
+    // Fallback to traditional generation
+    const testCode = generateTraditionalCode(actions, language);
+    const fullFileName = `${fileName}.spec.js`;
+    downloadFile(testCode, fullFileName);
+  }
 }
 
 function downloadFile(content, fileName) {
@@ -390,24 +456,274 @@ function tryAlternativeDownload(content, fileName) {
   });
 }
 
-function generatePlaywrightCode(actions, language) {
+async function generatePlaywrightCode(actions, language) {
+  if (AI_CONFIG.enabled && aiApiKey) {
+    return await generateAIPoweredCode(actions, language);
+  } else {
+    return generateTraditionalCode(actions, language);
+  }
+}
+
+async function generateAIPoweredCode(actions, language) {
+  try {
+    console.log('Generating AI-powered code for', actions.length, 'actions');
+    
+    // Prepare context for AI
+    const context = prepareAIContext(actions, language);
+    
+    // Generate AI prompt
+    const prompt = createAIPrompt(context);
+    
+    // Call AI API
+    const aiResponse = await callAIAPI(prompt);
+    
+    if (aiResponse && aiResponse.code) {
+      return aiResponse.code;
+    } else {
+      console.warn('AI generation failed, falling back to traditional generation');
+      return generateTraditionalCode(actions, language);
+    }
+  } catch (error) {
+    console.error('AI code generation error:', error);
+    return generateTraditionalCode(actions, language);
+  }
+}
+
+function prepareAIContext(actions, language) {
+  // Extract meaningful context from actions
+  const context = {
+    language: language,
+    totalActions: actions.length,
+    actionTypes: {},
+    pageUrls: new Set(),
+    formInteractions: [],
+    navigationFlow: [],
+    elementTypes: new Set(),
+    userIntent: inferUserIntent(actions),
+    actions: actions // Include the actual actions for the prompt
+  };
+  
+  actions.forEach((action, index) => {
+    // Count action types
+    context.actionTypes[action.type] = (context.actionTypes[action.type] || 0) + 1;
+    
+    // Track URLs
+    if (action.url) context.pageUrls.add(action.url);
+    
+    // Track form interactions
+    if (['type', 'select', 'check', 'submit'].includes(action.type)) {
+      context.formInteractions.push({
+        index,
+        type: action.type,
+        selector: action.selector,
+        value: action.value,
+        tagName: action.tagName
+      });
+    }
+    
+    // Track navigation
+    if (action.type === 'navigate') {
+      context.navigationFlow.push({
+        index,
+        url: action.url
+      });
+    }
+    
+    // Track element types
+    if (action.tagName) context.elementTypes.add(action.tagName);
+  });
+  
+  return context;
+}
+
+function inferUserIntent(actions) {
+  // Analyze actions to understand user intent
+  const intent = {
+    isFormSubmission: false,
+    isDataEntry: false,
+    isNavigation: false,
+    isSearch: false,
+    isFileUpload: false,
+    workflowType: 'general'
+  };
+  
+  const formActions = actions.filter(a => ['type', 'select', 'check', 'submit'].includes(a.type));
+  const navigationActions = actions.filter(a => a.type === 'navigate');
+  const searchKeywords = ['search', 'query', 'find', 'lookup'];
+  
+  if (formActions.length > 0) {
+    intent.isFormSubmission = formActions.some(a => a.type === 'submit');
+    intent.isDataEntry = formActions.length > 2;
+  }
+  
+  if (navigationActions.length > 0) {
+    intent.isNavigation = true;
+  }
+  
+  // Check for search patterns
+  const searchActions = actions.filter(a => 
+    a.type === 'type' && 
+    searchKeywords.some(keyword => 
+      (a.selector?.value || '').toLowerCase().includes(keyword) ||
+      (a.text || '').toLowerCase().includes(keyword)
+    )
+  );
+  
+  if (searchActions.length > 0) {
+    intent.isSearch = true;
+  }
+  
+  // Determine workflow type
+  if (intent.isFormSubmission && intent.isDataEntry) {
+    intent.workflowType = 'form_submission';
+  } else if (intent.isSearch) {
+    intent.workflowType = 'search';
+  } else if (intent.isNavigation) {
+    intent.workflowType = 'navigation';
+  }
+  
+  return intent;
+}
+
+function createAIPrompt(context) {
+  const actionsDescription = context.actions?.map((action, index) => 
+    `${index + 1}. ${action.type} on ${action.selector?.value || action.selector}${action.value ? ` with value "${action.value}"` : ''}${action.url ? ` (URL: ${action.url})` : ''}`
+  ).join('\n') || 'No actions recorded';
+  
+  // Get initial URL from the first action or use a placeholder
+  const initialUrl = context.actions?.[0]?.url || 'https://your-target-page.com';
+  
+  return {
+    role: "system",
+    content: `You are an expert Playwright test automation engineer. Generate high-quality, production-ready test code based on the recorded user actions.
+
+IMPORTANT REQUIREMENTS:
+1. **Chronological Order**: Actions must be generated in the exact order they were recorded
+2. **Navigation Handling**: Only include explicit navigation actions (page.goto) when the user actually navigated to a new URL
+3. **Page Grouping**: Group actions by the page they occur on, with navigation steps before page-specific actions
+4. **No Initial URL**: Do NOT start with the current page URL as a goto statement unless it was explicitly navigated to
+5. **Logical Steps**: Group related actions (like typing sequences) into meaningful test steps
+6. **Robust Selectors**: Use semantic selectors (getByRole, getByLabel, getByPlaceholder) over CSS selectors
+7. **Smart Assertions**: Add relevant assertions based on the workflow context
+8. **Proper Waits**: Include appropriate waits after navigation and form submissions
+
+Context:
+- Language: ${context.language}
+- Total Actions: ${context.totalActions}
+- Action Types: ${JSON.stringify(context.actionTypes)}
+- User Intent: ${JSON.stringify(context.userIntent)}
+- Workflow Type: ${context.workflowType}
+- Initial Page URL: ${initialUrl}
+
+Recorded Actions (in chronological order):
+${actionsDescription}
+
+Generate a complete, runnable test file that follows Playwright best practices and respects the chronological order of actions.`
+  };
+}
+
+async function callAIAPI(prompt) {
+  try {
+    const response = await fetch(AI_CONFIG.apiEndpoint, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${aiApiKey}`
+      },
+      body: JSON.stringify({
+        model: AI_CONFIG.model,
+        messages: [prompt],
+        max_tokens: AI_CONFIG.maxTokens,
+        temperature: AI_CONFIG.temperature
+      })
+    });
+    
+    if (!response.ok) {
+      throw new Error(`AI API error: ${response.status}`);
+    }
+    
+    const data = await response.json();
+    const generatedCode = data.choices[0]?.message?.content;
+    
+    if (generatedCode) {
+      return { code: generatedCode };
+    } else {
+      throw new Error('No code generated from AI');
+    }
+  } catch (error) {
+    console.error('AI API call failed:', error);
+    throw error;
+  }
+}
+
+async function validateAIConnection(apiKey, model) {
+  try {
+    console.log('Validating AI connection...');
+    
+    const testPrompt = {
+      role: "system",
+      content: "You are a test validator. Respond with 'OK' if you receive this message."
+    };
+    
+    const response = await fetch(AI_CONFIG.apiEndpoint, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${apiKey}`
+      },
+      body: JSON.stringify({
+        model: model || AI_CONFIG.model,
+        messages: [testPrompt],
+        max_tokens: 10,
+        temperature: 0
+      })
+    });
+    
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(`API Error ${response.status}: ${errorData.error?.message || 'Unknown error'}`);
+    }
+    
+    const data = await response.json();
+    if (data.choices && data.choices[0]?.message?.content) {
+      // Update the stored API key if validation succeeds
+      aiApiKey = apiKey;
+      AI_CONFIG.model = model || AI_CONFIG.model;
+      
+      // Save to storage
+      chrome.storage.sync.set({
+        aiApiKey: apiKey,
+        aiModel: model || AI_CONFIG.model
+      });
+      
+      return { success: true };
+    } else {
+      throw new Error('Invalid API response');
+    }
+  } catch (error) {
+    console.error('AI validation failed:', error);
+    return { success: false, error: error.message };
+  }
+}
+
+function generateTraditionalCode(actions, language) {
   let code = '';
   
   switch (language) {
     case 'javascript':
-      code = generateJavaScriptCode(actions);
+      code = generateTraditionalJavaScriptCode(actions);
       break;
     case 'typescript':
-      code = generateTypeScriptCode(actions);
+      code = generateTraditionalTypeScriptCode(actions);
       break;
     case 'python':
-      code = generatePythonCode(actions);
+      code = generateTraditionalPythonCode(actions);
       break;
     case 'java':
-      code = generateJavaCode(actions);
+      code = generateTraditionalJavaCode(actions);
       break;
     default:
-      code = generateJavaScriptCode(actions);
+      code = generateTraditionalJavaScriptCode(actions);
   }
   
   return code;
@@ -441,141 +757,233 @@ function playwrightLocatorCode(selectorObj, framePrefix = 'page.') {
   }
 }
 
-function generateJavaScriptCode(actions) {
-  // Remove hover actions
+function generateTraditionalJavaScriptCode(actions) {
+  // Remove hover actions and clean up actions
   const filteredActions = actions.filter(a => a.type !== 'hover');
-
-  // Find the first navigation action
-  const firstNavIdx = filteredActions.findIndex(a => a.type === 'navigate');
-  let actionsToUse = filteredActions;
-  if (firstNavIdx !== -1) {
-    // Only include actions from the first navigation onwards
-    actionsToUse = filteredActions.slice(firstNavIdx);
-  }
+  const cleanedActions = cleanActionsForCode(filteredActions);
 
   let code = `import { test, expect } from '@playwright/test';\n\n`;
   code += `test('Recorded Test - ${currentFileName}', async ({ page }) => {\n`;
 
   let stepBuffer = [];
   let stepDescription = '';
-  let lastNavigatedUrl = null;
-  const seenNavigations = new Set();
+  let currentUrl = null;
+  let currentPageActions = [];
+  let pageGroups = [];
 
-  // Helper to flush the current step buffer
-  function flushStep() {
-    if (stepBuffer.length > 0 && stepDescription) {
-      code += `  await test.step(${JSON.stringify(stepDescription)}, async () => {\n`;
-      code += stepBuffer.join('');
-      code += `  });\n\n`;
-      stepBuffer = [];
-      stepDescription = '';
+  // Group actions by page/URL
+  for (let i = 0; i < cleanedActions.length; i++) {
+    const action = cleanedActions[i];
+    
+    if (action.type === 'navigate') {
+      // If we have actions for the current page, save them
+      if (currentPageActions.length > 0) {
+        pageGroups.push({
+          url: currentUrl,
+          actions: [...currentPageActions]
+        });
+      }
+      // Start new page group
+      currentUrl = action.url;
+      currentPageActions = [];
+    } else {
+      // Add action to current page
+      currentPageActions.push(action);
     }
   }
+  
+  // Add the last page group if it has actions
+  if (currentPageActions.length > 0) {
+    pageGroups.push({
+      url: currentUrl,
+      actions: currentPageActions
+    });
+  }
 
-  for (let i = 0; i < actionsToUse.length; i++) {
-    const action = actionsToUse[i];
-    // Only insert navigation if it's a new URL
-    if (action.type === 'navigate' && !seenNavigations.has(action.url)) {
-      flushStep();
-      stepDescription = `Go to ${action.url}`;
-      stepBuffer.push(`    await page.goto('${action.url}');\n`);
-      stepBuffer.push(`    await page.waitForTimeout(3000);\n`);
-      lastNavigatedUrl = action.url;
-      seenNavigations.add(action.url);
-      flushStep();
-      continue;
+  // Generate code for each page group
+  for (let groupIndex = 0; groupIndex < pageGroups.length; groupIndex++) {
+    const group = pageGroups[groupIndex];
+    
+    // Always add navigation step for the first group, or if it's a different URL
+    if (groupIndex === 0 || group.url) {
+      const url = group.url || 'current page';
+      code += `  await test.step("Go to ${url}", async () => {\n`;
+      if (group.url) {
+        code += `    await page.goto('${group.url}');\n`;
+        code += `    await page.waitForTimeout(3000);\n`;
+              } else {
+          // If no URL is provided, use the initial page URL from when recording started
+          if (initialPageUrl) {
+            code += `    await page.goto('${initialPageUrl}');\n`;
+            code += `    await page.waitForTimeout(3000);\n`;
+          } else {
+            // Fallback - add a comment indicating navigation is needed
+            code += `    // TODO: Add navigation to the target page\n`;
+            code += `    // await page.goto('https://your-target-page.com');\n`;
+            code += `    await page.waitForTimeout(3000);\n`;
+          }
+        }
+      code += `  });\n\n`;
     }
-    // Skip duplicate navigation
-    if (action.type === 'navigate') {
-      continue;
-    }
-    // Group actions under the last navigation
-    let description = '';
-    switch (action.type) {
-      case 'click':
-        description = `Click on ${action.selector?.value || action.selector}`;
-        break;
-      case 'type':
-        description = `Type in ${action.selector?.value || action.selector}`;
-        break;
-      case 'select':
-        description = `Select option in ${action.selector?.value || action.selector}`;
-        break;
-      case 'check':
-        description = `Check ${action.selector?.value || action.selector}`;
-        break;
-      case 'upload':
-        description = `Upload file to ${action.selector?.value || action.selector}`;
-        break;
-      case 'submit':
-        description = `Submit form ${action.selector?.value || action.selector}`;
-        break;
-      default:
-        description = `${action.type} on ${action.selector?.value || action.selector}`;
-    }
-    if (!stepDescription) stepDescription = description;
 
-    // Generate Playwright code for the action
-    let line = '';
-    const framePrefix = generateFramePrefix(action.framePath);
-    // Prioritize unique ID over getByTestId
-    let selectorObj = action.selector || { type: 'css', value: action.selector };
-    if (action.selector && action.selector.type === 'getByTestId') {
-      // If a unique ID is available, use it instead
-      if (action.elementId && action.elementId.trim()) {
-        selectorObj = { type: 'id', value: `#${action.elementId}` };
+    // Generate actions for this page
+    if (group.actions.length > 0) {
+      // Group related actions together
+      let currentActionGroup = [];
+      let groupDescription = '';
+      
+      for (let actionIndex = 0; actionIndex < group.actions.length; actionIndex++) {
+        const action = group.actions[actionIndex];
+        
+        // Determine if this action should start a new group
+        let shouldStartNewGroup = false;
+        
+        // Start new group for different action types or after certain actions
+        if (action.type === 'type' && currentActionGroup.length > 0) {
+          const lastAction = currentActionGroup[currentActionGroup.length - 1];
+          if (lastAction.type !== 'type' && lastAction.type !== 'keypress') {
+            shouldStartNewGroup = true;
+          }
+        }
+        
+        // Start new group for form submissions
+        if (action.type === 'submit') {
+          shouldStartNewGroup = true;
+        }
+        
+        // Flush current group if needed
+        if (shouldStartNewGroup && currentActionGroup.length > 0) {
+          flushActionGroup(currentActionGroup, groupDescription);
+          currentActionGroup = [];
+          groupDescription = '';
+        }
+        
+        // Add action to current group
+        currentActionGroup.push(action);
+        
+        // Set group description if not set
+        if (!groupDescription) {
+          groupDescription = getActionGroupDescription(currentActionGroup);
+        }
+      }
+      
+      // Flush the last group
+      if (currentActionGroup.length > 0) {
+        flushActionGroup(currentActionGroup, groupDescription);
       }
     }
-    switch (action.type) {
-      case 'click':
-        line = `    await ${playwrightLocatorCode(selectorObj, framePrefix)}.click({ force: true });\n`;
-        break;
-      case 'type':
-        line = `    await ${playwrightLocatorCode(selectorObj, framePrefix)}.fill('${action.value || ''}');\n`;
-        line += `    await page.waitForTimeout(3000);\n`;
-        break;
-      case 'select':
-        line = `    await ${playwrightLocatorCode(selectorObj, framePrefix)}.selectOption('${action.value || ''}');\n`;
-        break;
-      case 'check':
-        if (action.inputType === 'checkbox') {
-          if (action.checked) {
-            line = `    await ${playwrightLocatorCode(selectorObj, framePrefix)}.check();\n`;
-          } else {
-            line = `    await ${playwrightLocatorCode(selectorObj, framePrefix)}.uncheck();\n`;
-          }
-        } else if (action.inputType === 'radio') {
-          line = `    await ${playwrightLocatorCode(selectorObj, framePrefix)}.check();\n`;
-        }
-        break;
-      case 'upload':
-        line = `    await ${playwrightLocatorCode(selectorObj, framePrefix)}.setInputFiles('path/to/your/file');\n`;
-        break;
-      case 'submit':
-        line = `    await ${playwrightLocatorCode(selectorObj, framePrefix)}.locator('button[type=\"submit\"]').click({ force: true });\n`;
-        break;
-      case 'keypress':
-        if (action.key) {
-          if (action.selector && action.selector.value && action.selector.value !== 'body') {
-            line = `    await ${playwrightLocatorCode(selectorObj, framePrefix)}.press('${action.key}');\n`;
-          } else {
-            line = `    await page.keyboard.press('${action.key}');\n`;
-          }
-        }
-        break;
-      case 'scroll':
-        line = `    await ${framePrefix}evaluate(() => window.scrollTo(${action.scrollX}, ${action.scrollY}));\n`;
-        break;
-      // Add more cases as needed
-    }
-    // If the next action is a navigation to a new URL, insert a wait after this action
-    const nextAction = actionsToUse[i + 1];
-    if (nextAction && nextAction.type === 'navigate' && nextAction.url !== lastNavigatedUrl) {
-      line += `    await page.waitForTimeout(3000);\n`;
-    }
-    stepBuffer.push(line);
   }
-  flushStep();
+
+  // Helper function to flush action group
+  function flushActionGroup(actions, description) {
+    if (actions.length === 0) return;
+    
+    code += `  await test.step(${JSON.stringify(description)}, async () => {\n`;
+    
+    for (const action of actions) {
+      const framePrefix = generateFramePrefix(action.framePath);
+      let selectorObj = action.selector || { type: 'css', value: action.selector };
+      
+      // Prioritize unique ID over getByTestId
+      if (action.selector && action.selector.type === 'getByTestId') {
+        if (action.elementId && action.elementId.trim()) {
+          selectorObj = { type: 'id', value: `#${action.elementId}` };
+        }
+      }
+      
+      let line = '';
+      switch (action.type) {
+        case 'click':
+          line = `    await ${playwrightLocatorCode(selectorObj, framePrefix)}.click({ force: true });\n`;
+          break;
+        case 'type':
+          line = `    await ${playwrightLocatorCode(selectorObj, framePrefix)}.fill('${action.value || ''}');\n`;
+          line += `    await page.waitForTimeout(3000);\n`;
+          break;
+        case 'select':
+          line = `    await ${playwrightLocatorCode(selectorObj, framePrefix)}.selectOption('${action.value || ''}');\n`;
+          break;
+        case 'check':
+          if (action.inputType === 'checkbox') {
+            if (action.checked) {
+              line = `    await ${playwrightLocatorCode(selectorObj, framePrefix)}.check();\n`;
+            } else {
+              line = `    await ${playwrightLocatorCode(selectorObj, framePrefix)}.uncheck();\n`;
+            }
+          } else if (action.inputType === 'radio') {
+            line = `    await ${playwrightLocatorCode(selectorObj, framePrefix)}.check();\n`;
+          }
+          break;
+        case 'upload':
+          line = `    await ${playwrightLocatorCode(selectorObj, framePrefix)}.setInputFiles('path/to/your/file');\n`;
+          break;
+        case 'submit':
+          // Only add .locator('button[type="submit"]') if this is actually a form element
+          if (action.tagName === 'form') {
+            line = `    await ${playwrightLocatorCode(selectorObj, framePrefix)}.locator('button[type=\"submit\"]').click({ force: true });\n`;
+          } else {
+            // For regular buttons that are classified as submit, treat them as click
+            line = `    await ${playwrightLocatorCode(selectorObj, framePrefix)}.click({ force: true });\n`;
+          }
+          break;
+        case 'keypress':
+          if (action.key) {
+            if (action.selector && action.selector.value && action.selector.value !== 'body') {
+              line = `    await ${playwrightLocatorCode(selectorObj, framePrefix)}.press('${action.key}');\n`;
+            } else {
+              line = `    await page.keyboard.press('${action.key}');\n`;
+            }
+          }
+          break;
+        case 'scroll':
+          line = `    await ${framePrefix}evaluate(() => window.scrollTo(${action.scrollX}, ${action.scrollY}));\n`;
+          break;
+      }
+      code += line;
+    }
+    
+    code += `  });\n\n`;
+  }
+
+  // Helper function to get action group description
+  function getActionGroupDescription(actions) {
+    if (actions.length === 0) return '';
+    
+    const firstAction = actions[0];
+    const lastAction = actions[actions.length - 1];
+    
+    // Special handling for search flows
+    if (actions.some(a => a.type === 'type' && a.value && a.value.toLowerCase().includes('search'))) {
+      return 'Search for content';
+    }
+    
+    // Special handling for form submissions
+    if (actions.some(a => a.type === 'submit')) {
+      return 'Submit form';
+    }
+    
+    // Special handling for typing sequences
+    if (actions.every(a => a.type === 'type' || a.type === 'keypress')) {
+      return `Type in ${firstAction.selector?.value || firstAction.selector}`;
+    }
+    
+    // Default descriptions
+    switch (firstAction.type) {
+      case 'click':
+        return `Click on ${firstAction.selector?.value || firstAction.selector}`;
+      case 'type':
+        return `Type in ${firstAction.selector?.value || firstAction.selector}`;
+      case 'select':
+        return `Select option in ${firstAction.selector?.value || firstAction.selector}`;
+      case 'check':
+        return `Check ${firstAction.selector?.value || firstAction.selector}`;
+      case 'upload':
+        return `Upload file to ${firstAction.selector?.value || firstAction.selector}`;
+      default:
+        return `${firstAction.type} on ${firstAction.selector?.value || firstAction.selector}`;
+    }
+  }
+
   code += `});\n`;
   return code;
 }
@@ -672,7 +1080,7 @@ function generateFramePrefix(framePath) {
   return prefix;
 }
 
-function generateTypeScriptCode(actions) {
+function generateTraditionalTypeScriptCode(actions) {
   let code = `import { test, expect } from '@playwright/test';
 
 test('Recorded Test - ${currentFileName}', async ({ page }) => {
@@ -780,7 +1188,7 @@ test('Recorded Test - ${currentFileName}', async ({ page }) => {
   return code;
 }
 
-function generatePythonCode(actions) {
+function generateTraditionalPythonCode(actions) {
   let code = `from playwright.sync_api import sync_playwright, expect
 
 def test_recorded_${currentFileName.replace('-', '_')}():
@@ -912,7 +1320,7 @@ function generatePythonFramePrefix(framePath) {
   return prefix;
 }
 
-function generateJavaCode(actions) {
+function generateTraditionalJavaCode(actions) {
   let code = `import com.microsoft.playwright.*;
 
 public class ${currentFileName.replace('-', '_').replace(/[^a-zA-Z0-9_]/g, '')}Test {

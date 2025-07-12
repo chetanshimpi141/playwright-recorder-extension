@@ -295,4 +295,110 @@ document.addEventListener('DOMContentLoaded', function() {
       }
     });
   }
+
+  // AI Configuration Elements
+  const aiEnabledCheckbox = document.getElementById('aiEnabled');
+  const aiSettings = document.getElementById('aiSettings');
+  const aiApiKeyInput = document.getElementById('aiApiKey');
+  const aiModelSelect = document.getElementById('aiModel');
+  const aiStatus = document.getElementById('aiStatus');
+  const togglePasswordBtn = document.getElementById('togglePassword');
+
+  // Load AI configuration
+  loadAIConfig();
+
+  // AI Toggle Event
+  aiEnabledCheckbox.addEventListener('change', function() {
+    const enabled = this.checked;
+    aiSettings.classList.toggle('show', enabled);
+    saveAIConfig();
+    
+    if (enabled) {
+      validateAIConnection();
+    } else {
+      aiStatus.textContent = 'AI disabled';
+      aiStatus.className = 'ai-status disconnected';
+    }
+  });
+
+  // API Key Input Events
+  aiApiKeyInput.addEventListener('input', function() {
+    saveAIConfig();
+    if (aiEnabledCheckbox.checked) {
+      validateAIConnection();
+    }
+  });
+
+  aiModelSelect.addEventListener('change', function() {
+    saveAIConfig();
+  });
+
+  // Toggle Password Visibility
+  togglePasswordBtn.addEventListener('click', function() {
+    const type = aiApiKeyInput.type === 'password' ? 'text' : 'password';
+    aiApiKeyInput.type = type;
+    this.textContent = type === 'password' ? '👁️' : '🙈';
+  });
+
+  // Load AI configuration from storage
+  function loadAIConfig() {
+    chrome.storage.sync.get(['aiEnabled', 'aiApiKey', 'aiModel'], function(result) {
+      aiEnabledCheckbox.checked = result.aiEnabled || false;
+      aiApiKeyInput.value = result.aiApiKey || '';
+      aiModelSelect.value = result.aiModel || 'gpt-4';
+      
+      aiSettings.classList.toggle('show', aiEnabledCheckbox.checked);
+      
+      if (aiEnabledCheckbox.checked) {
+        validateAIConnection();
+      }
+    });
+  }
+
+  // Save AI configuration to storage
+  function saveAIConfig() {
+    const config = {
+      aiEnabled: aiEnabledCheckbox.checked,
+      aiApiKey: aiApiKeyInput.value,
+      aiModel: aiModelSelect.value
+    };
+    
+    chrome.storage.sync.set(config, function() {
+      console.log('AI configuration saved');
+    });
+  }
+
+  // Validate AI connection
+  async function validateAIConnection() {
+    const apiKey = aiApiKeyInput.value.trim();
+    
+    if (!apiKey) {
+      aiStatus.textContent = 'API key required';
+      aiStatus.className = 'ai-status disconnected';
+      return;
+    }
+
+    aiStatus.textContent = 'Validating connection...';
+    aiStatus.className = 'ai-status disconnected';
+
+    try {
+      // Send test request to background script
+      chrome.runtime.sendMessage({
+        action: 'validateAI',
+        apiKey: apiKey,
+        model: aiModelSelect.value
+      }, function(response) {
+        if (response && response.success) {
+          aiStatus.textContent = 'Connected ✓';
+          aiStatus.className = 'ai-status connected';
+        } else {
+          aiStatus.textContent = 'Connection failed: ' + (response?.error || 'Unknown error');
+          aiStatus.className = 'ai-status disconnected';
+        }
+      });
+    } catch (error) {
+      aiStatus.textContent = 'Connection error: ' + error.message;
+      aiStatus.className = 'ai-status disconnected';
+    }
+  }
 }); 

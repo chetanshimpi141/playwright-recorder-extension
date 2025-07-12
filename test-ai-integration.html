@@ -1,0 +1,426 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Integration Test - Playwright Recorder</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #f8f9fa;
+        }
+        
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        
+        h1 {
+            color: #2c3e50;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        
+        .test-section {
+            margin-bottom: 30px;
+            padding: 20px;
+            border: 2px solid #e9ecef;
+            border-radius: 8px;
+        }
+        
+        .test-section h2 {
+            color: #3498db;
+            margin-top: 0;
+        }
+        
+        .form-group {
+            margin-bottom: 15px;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 500;
+            color: #34495e;
+        }
+        
+        input, select, textarea {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            font-size: 14px;
+            box-sizing: border-box;
+        }
+        
+        input:focus, select:focus, textarea:focus {
+            outline: none;
+            border-color: #3498db;
+            box-shadow: 0 0 0 2px rgba(52, 152, 219, 0.2);
+        }
+        
+        button {
+            background: #3498db;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 6px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        
+        button:hover {
+            background: #2980b9;
+        }
+        
+        button.secondary {
+            background: #95a5a6;
+        }
+        
+        button.secondary:hover {
+            background: #7f8c8d;
+        }
+        
+        button.success {
+            background: #27ae60;
+        }
+        
+        button.success:hover {
+            background: #229954;
+        }
+        
+        .checkbox-group {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 10px;
+        }
+        
+        .checkbox-group input[type="checkbox"] {
+            width: auto;
+        }
+        
+        .search-section {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+        
+        .search-results {
+            margin-top: 15px;
+            padding: 15px;
+            background: white;
+            border-radius: 6px;
+            border: 1px solid #e9ecef;
+        }
+        
+        .product-item {
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            margin-bottom: 10px;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        
+        .product-item:hover {
+            background: #f8f9fa;
+        }
+        
+        .success-message {
+            background: #d5f4e6;
+            color: #27ae60;
+            padding: 15px;
+            border-radius: 6px;
+            margin-top: 15px;
+            display: none;
+        }
+        
+        .error-message {
+            background: #fdf2f2;
+            color: #e74c3c;
+            padding: 15px;
+            border-radius: 6px;
+            margin-top: 15px;
+            display: none;
+        }
+        
+        .ai-info {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 30px;
+        }
+        
+        .ai-info h2 {
+            margin-top: 0;
+            color: white;
+        }
+        
+        .ai-benefits {
+            list-style: none;
+            padding: 0;
+        }
+        
+        .ai-benefits li {
+            margin-bottom: 8px;
+            padding-left: 20px;
+            position: relative;
+        }
+        
+        .ai-benefits li:before {
+            content: "✨";
+            position: absolute;
+            left: 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🤖 AI Integration Test Page</h1>
+        
+        <div class="ai-info">
+            <h2>AI-Powered Code Generation</h2>
+            <p>This page demonstrates the enhanced capabilities of the Playwright Recorder with AI integration. Record your interactions and see how AI generates intelligent, production-ready test code.</p>
+            <ul class="ai-benefits">
+                <li><strong>Smart Selectors:</strong> Uses semantic selectors like getByRole, getByLabel</li>
+                <li><strong>Intelligent Assertions:</strong> Automatically generates relevant assertions</li>
+                <li><strong>Logical Grouping:</strong> Groups actions into meaningful test steps</li>
+                <li><strong>Error Handling:</strong> Includes proper error handling and waits</li>
+                <li><strong>Context Awareness:</strong> Understands user intent and workflow patterns</li>
+            </ul>
+        </div>
+
+        <!-- User Registration Form -->
+        <div class="test-section">
+            <h2>📝 User Registration Form</h2>
+            <form id="registrationForm">
+                <div class="form-group">
+                    <label for="email">Email Address:</label>
+                    <input type="email" id="email" name="email" placeholder="Enter your email address" data-testid="email-input">
+                </div>
+                
+                <div class="form-group">
+                    <label for="password">Password:</label>
+                    <input type="password" id="password" name="password" placeholder="Enter your password" data-testid="password-input">
+                </div>
+                
+                <div class="form-group">
+                    <label for="confirmPassword">Confirm Password:</label>
+                    <input type="password" id="confirmPassword" name="confirmPassword" placeholder="Confirm your password" data-testid="confirm-password-input">
+                </div>
+                
+                <div class="form-group">
+                    <label for="fullName">Full Name:</label>
+                    <input type="text" id="fullName" name="fullName" placeholder="Enter your full name" data-testid="full-name-input">
+                </div>
+                
+                <div class="form-group">
+                    <label for="country">Country:</label>
+                    <select id="country" name="country" data-testid="country-select">
+                        <option value="">Select a country</option>
+                        <option value="us">United States</option>
+                        <option value="ca">Canada</option>
+                        <option value="uk">United Kingdom</option>
+                        <option value="au">Australia</option>
+                    </select>
+                </div>
+                
+                <div class="checkbox-group">
+                    <input type="checkbox" id="newsletter" name="newsletter" data-testid="newsletter-checkbox">
+                    <label for="newsletter">Subscribe to newsletter</label>
+                </div>
+                
+                <div class="checkbox-group">
+                    <input type="checkbox" id="terms" name="terms" data-testid="terms-checkbox">
+                    <label for="terms">I agree to the terms and conditions</label>
+                </div>
+                
+                <button type="submit" data-testid="create-account-btn">Create Account</button>
+            </form>
+            
+            <div id="registrationSuccess" class="success-message">
+                ✅ Registration successful! Welcome to our platform.
+            </div>
+            
+            <div id="registrationError" class="error-message">
+                ❌ Registration failed. Please check your information and try again.
+            </div>
+        </div>
+
+        <!-- Product Search -->
+        <div class="test-section">
+            <h2>🔍 Product Search</h2>
+            <div class="search-section">
+                <div class="form-group">
+                    <label for="searchInput">Search Products:</label>
+                    <input type="text" id="searchInput" placeholder="Search for products..." data-testid="search-input">
+                </div>
+                <button onclick="searchProducts()" data-testid="search-btn">Search</button>
+                
+                <div id="searchResults" class="search-results" style="display: none;">
+                    <h3>Search Results</h3>
+                    <div class="product-item" data-testid="product-item">
+                        <h4>Laptop Pro X1</h4>
+                        <p>High-performance laptop with latest specs</p>
+                        <button onclick="addToCart('laptop-pro-x1')" data-testid="add-to-cart-btn">Add to Cart</button>
+                    </div>
+                    <div class="product-item" data-testid="product-item">
+                        <h4>Gaming Laptop Y2</h4>
+                        <p>Perfect for gaming and content creation</p>
+                        <button onclick="addToCart('gaming-laptop-y2')" data-testid="add-to-cart-btn">Add to Cart</button>
+                    </div>
+                    <div class="product-item" data-testid="product-item">
+                        <h4>Business Laptop Z3</h4>
+                        <p>Reliable laptop for business professionals</p>
+                        <button onclick="addToCart('business-laptop-z3')" data-testid="add-to-cart-btn">Add to Cart</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Shopping Cart -->
+        <div class="test-section">
+            <h2>🛒 Shopping Cart</h2>
+            <div id="cartItems">
+                <p>Your cart is empty</p>
+            </div>
+            <button onclick="viewCart()" data-testid="view-cart-btn" style="display: none;">View Cart</button>
+            <button onclick="checkout()" data-testid="checkout-btn" style="display: none;">Proceed to Checkout</button>
+        </div>
+
+        <!-- File Upload Test -->
+        <div class="test-section">
+            <h2>📁 File Upload</h2>
+            <div class="form-group">
+                <label for="fileUpload">Upload Profile Picture:</label>
+                <input type="file" id="fileUpload" accept="image/*" data-testid="file-upload">
+            </div>
+            <button onclick="uploadFile()" data-testid="upload-btn">Upload File</button>
+        </div>
+
+        <!-- Dynamic Content Test -->
+        <div class="test-section">
+            <h2>⚡ Dynamic Content</h2>
+            <button onclick="loadDynamicContent()" data-testid="load-content-btn">Load Dynamic Content</button>
+            <div id="dynamicContent"></div>
+        </div>
+    </div>
+
+    <script>
+        // Registration form handling
+        document.getElementById('registrationForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+            const confirmPassword = document.getElementById('confirmPassword').value;
+            
+            if (password !== confirmPassword) {
+                showError('Passwords do not match');
+                return;
+            }
+            
+            if (email && password && confirmPassword) {
+                showSuccess();
+            } else {
+                showError('Please fill in all required fields');
+            }
+        });
+
+        function showSuccess() {
+            document.getElementById('registrationSuccess').style.display = 'block';
+            document.getElementById('registrationError').style.display = 'none';
+        }
+
+        function showError(message) {
+            document.getElementById('registrationError').textContent = '❌ ' + message;
+            document.getElementById('registrationError').style.display = 'block';
+            document.getElementById('registrationSuccess').style.display = 'none';
+        }
+
+        // Product search
+        function searchProducts() {
+            const searchTerm = document.getElementById('searchInput').value;
+            if (searchTerm.trim()) {
+                document.getElementById('searchResults').style.display = 'block';
+            }
+        }
+
+        // Shopping cart functionality
+        let cartItems = [];
+
+        function addToCart(productId) {
+            cartItems.push(productId);
+            updateCartDisplay();
+        }
+
+        function updateCartDisplay() {
+            const cartContainer = document.getElementById('cartItems');
+            const viewCartBtn = document.querySelector('[data-testid="view-cart-btn"]');
+            const checkoutBtn = document.querySelector('[data-testid="checkout-btn"]');
+            
+            if (cartItems.length > 0) {
+                cartContainer.innerHTML = `
+                    <h3>Cart Items (${cartItems.length})</h3>
+                    <ul>
+                        ${cartItems.map(item => `<li>${item}</li>`).join('')}
+                    </ul>
+                `;
+                viewCartBtn.style.display = 'inline-block';
+                checkoutBtn.style.display = 'inline-block';
+            } else {
+                cartContainer.innerHTML = '<p>Your cart is empty</p>';
+                viewCartBtn.style.display = 'none';
+                checkoutBtn.style.display = 'none';
+            }
+        }
+
+        function viewCart() {
+            alert('Viewing cart with ' + cartItems.length + ' items');
+        }
+
+        function checkout() {
+            alert('Proceeding to checkout...');
+        }
+
+        // File upload
+        function uploadFile() {
+            const fileInput = document.getElementById('fileUpload');
+            if (fileInput.files.length > 0) {
+                alert('File uploaded: ' + fileInput.files[0].name);
+            } else {
+                alert('Please select a file first');
+            }
+        }
+
+        // Dynamic content loading
+        function loadDynamicContent() {
+            const container = document.getElementById('dynamicContent');
+            container.innerHTML = `
+                <div style="padding: 15px; background: #e8f5e8; border-radius: 6px; margin-top: 10px;">
+                    <h4>Dynamic Content Loaded!</h4>
+                    <p>This content was loaded dynamically after clicking the button.</p>
+                    <button onclick="this.parentElement.remove()" data-testid="remove-content-btn">Remove Content</button>
+                </div>
+            `;
+        }
+
+        // Handle Enter key in search
+        document.getElementById('searchInput').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                searchProducts();
+            }
+        });
+    </script>
+</body>
+</html> 

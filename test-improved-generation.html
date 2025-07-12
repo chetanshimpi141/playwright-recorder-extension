@@ -1,0 +1,347 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Improved Code Generation Test</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #f8f9fa;
+        }
+        
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        
+        h1 {
+            color: #2c3e50;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        
+        .test-section {
+            margin-bottom: 30px;
+            padding: 20px;
+            border: 2px solid #e9ecef;
+            border-radius: 8px;
+        }
+        
+        .test-section h2 {
+            color: #3498db;
+            margin-top: 0;
+        }
+        
+        .form-group {
+            margin-bottom: 15px;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 500;
+            color: #34495e;
+        }
+        
+        input, select, textarea {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            font-size: 14px;
+            box-sizing: border-box;
+        }
+        
+        input:focus, select:focus, textarea:focus {
+            outline: none;
+            border-color: #3498db;
+            box-shadow: 0 0 0 2px rgba(52, 152, 219, 0.2);
+        }
+        
+        button {
+            background: #3498db;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 6px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: background 0.2s;
+            margin-right: 10px;
+            margin-bottom: 10px;
+        }
+        
+        button:hover {
+            background: #2980b9;
+        }
+        
+        .success-message {
+            background: #d5f4e6;
+            color: #27ae60;
+            padding: 15px;
+            border-radius: 6px;
+            margin-top: 15px;
+            display: none;
+        }
+        
+        .info-box {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 30px;
+        }
+        
+        .info-box h2 {
+            margin-top: 0;
+            color: white;
+        }
+        
+        .info-box ul {
+            list-style: none;
+            padding: 0;
+        }
+        
+        .info-box li {
+            margin-bottom: 8px;
+            padding-left: 20px;
+            position: relative;
+        }
+        
+        .info-box li:before {
+            content: "✅";
+            position: absolute;
+            left: 0;
+        }
+        
+        .search-section {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+        
+        .search-results {
+            margin-top: 15px;
+            padding: 15px;
+            background: white;
+            border-radius: 6px;
+            border: 1px solid #e9ecef;
+        }
+        
+        .product-item {
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            margin-bottom: 10px;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        
+        .product-item:hover {
+            background: #f8f9fa;
+        }
+        
+        .navigation-buttons {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+        
+        .navigation-buttons button {
+            flex: 1;
+            min-width: 120px;
+        }
+        
+        .btn-secondary {
+            background: #95a5a6;
+        }
+        
+        .btn-secondary:hover {
+            background: #7f8c8d;
+        }
+        
+        .btn-success {
+            background: #27ae60;
+        }
+        
+        .btn-success:hover {
+            background: #229954;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔧 Improved Code Generation Test</h1>
+        
+        <div class="info-box">
+            <h2>What's Fixed</h2>
+            <ul>
+                <li><strong>Chronological Order:</strong> Actions are now generated in the exact order they were recorded</li>
+                <li><strong>No Initial URL:</strong> Won't start with current page URL as goto statement</li>
+                <li><strong>Page Grouping:</strong> Actions are properly grouped by the page they occur on</li>
+                <li><strong>Smart Navigation:</strong> Only includes explicit navigation when user actually navigated</li>
+                <li><strong>Logical Steps:</strong> Related actions are grouped into meaningful test steps</li>
+            </ul>
+        </div>
+
+        <!-- Navigation Test -->
+        <div class="test-section">
+            <h2>🧭 Navigation Test</h2>
+            <p>Test the improved navigation handling. Start recording, then:</p>
+            <ol>
+                <li>Click "Go to Google" (this should create a navigation step)</li>
+                <li>Type "test search" in the search box</li>
+                <li>Click "Go to Example" (another navigation)</li>
+                <li>Fill out the form below</li>
+            </ol>
+            
+            <div class="navigation-buttons">
+                <button onclick="goToGoogle()" data-testid="google-btn">Go to Google</button>
+                <button onclick="goToExample()" data-testid="example-btn">Go to Example</button>
+                <button onclick="goToGitHub()" data-testid="github-btn">Go to GitHub</button>
+            </div>
+        </div>
+
+        <!-- Search Test -->
+        <div class="test-section">
+            <h2>🔍 Search Test</h2>
+            <div class="search-section">
+                <div class="form-group">
+                    <label for="searchInput">Search:</label>
+                    <input type="text" id="searchInput" placeholder="Enter search term..." data-testid="search-input">
+                </div>
+                <button onclick="performSearch()" data-testid="search-btn">Search</button>
+                
+                <div id="searchResults" class="search-results" style="display: none;">
+                    <h3>Search Results</h3>
+                    <div class="product-item" data-testid="result-item">
+                        <h4>Test Result 1</h4>
+                        <p>This is a test search result</p>
+                        <button onclick="selectResult('result1')" data-testid="select-result-btn">Select</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Form Test -->
+        <div class="test-section">
+            <h2>📝 Form Test</h2>
+            <form id="testForm">
+                <div class="form-group">
+                    <label for="name">Full Name:</label>
+                    <input type="text" id="name" name="name" placeholder="Enter your full name" data-testid="name-input">
+                </div>
+                
+                <div class="form-group">
+                    <label for="email">Email:</label>
+                    <input type="email" id="email" name="email" placeholder="Enter your email" data-testid="email-input">
+                </div>
+                
+                <div class="form-group">
+                    <label for="message">Message:</label>
+                    <textarea id="message" name="message" placeholder="Enter your message" data-testid="message-input" rows="4"></textarea>
+                </div>
+                
+                <div class="form-group">
+                    <label for="category">Category:</label>
+                    <select id="category" name="category" data-testid="category-select">
+                        <option value="">Select a category</option>
+                        <option value="general">General</option>
+                        <option value="support">Support</option>
+                        <option value="feedback">Feedback</option>
+                    </select>
+                </div>
+                
+                <button type="submit" data-testid="submit-btn">Submit Form</button>
+            </form>
+            
+            <div id="formSuccess" class="success-message">
+                ✅ Form submitted successfully!
+            </div>
+        </div>
+
+        <!-- Action Test -->
+        <div class="test-section">
+            <h2>⚡ Action Test</h2>
+            <p>Test various UI actions:</p>
+            
+            <button onclick="showAlert()" data-testid="alert-btn">Show Alert</button>
+            <button onclick="toggleContent()" data-testid="toggle-btn">Toggle Content</button>
+            <button onclick="scrollToBottom()" data-testid="scroll-btn">Scroll to Bottom</button>
+            
+            <div id="toggleContent" style="display: none; margin-top: 15px; padding: 15px; background: #f8f9fa; border-radius: 6px;">
+                <h4>Dynamic Content</h4>
+                <p>This content was toggled by clicking the button above.</p>
+                <button onclick="hideContent()" data-testid="hide-btn">Hide Content</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Navigation functions
+        function goToGoogle() {
+            window.open('https://www.google.com', '_blank');
+        }
+        
+        function goToExample() {
+            window.open('https://example.com', '_blank');
+        }
+        
+        function goToGitHub() {
+            window.open('https://github.com', '_blank');
+        }
+        
+        // Search function
+        function performSearch() {
+            const searchTerm = document.getElementById('searchInput').value;
+            if (searchTerm.trim()) {
+                document.getElementById('searchResults').style.display = 'block';
+            }
+        }
+        
+        function selectResult(resultId) {
+            alert(`Selected result: ${resultId}`);
+        }
+        
+        // Form handling
+        document.getElementById('testForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            document.getElementById('formSuccess').style.display = 'block';
+        });
+        
+        // Action functions
+        function showAlert() {
+            alert('This is a test alert!');
+        }
+        
+        function toggleContent() {
+            const content = document.getElementById('toggleContent');
+            content.style.display = content.style.display === 'none' ? 'block' : 'none';
+        }
+        
+        function hideContent() {
+            document.getElementById('toggleContent').style.display = 'none';
+        }
+        
+        function scrollToBottom() {
+            window.scrollTo(0, document.body.scrollHeight);
+        }
+        
+        // Handle Enter key in search
+        document.getElementById('searchInput').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                performSearch();
+            }
+        });
+    </script>
+</body>
+</html> 

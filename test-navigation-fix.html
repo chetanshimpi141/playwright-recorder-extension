@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Navigation Fix Test</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #f8f9fa;
+        }
+        
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        
+        h1 {
+            color: #2c3e50;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        
+        .test-section {
+            margin-bottom: 30px;
+            padding: 20px;
+            border: 2px solid #e9ecef;
+            border-radius: 8px;
+        }
+        
+        .test-section h2 {
+            color: #3498db;
+            margin-top: 0;
+        }
+        
+        .form-group {
+            margin-bottom: 15px;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 500;
+            color: #34495e;
+        }
+        
+        input, select, textarea {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            font-size: 14px;
+            box-sizing: border-box;
+        }
+        
+        input:focus, select:focus, textarea:focus {
+            outline: none;
+            border-color: #3498db;
+            box-shadow: 0 0 0 2px rgba(52, 152, 219, 0.2);
+        }
+        
+        button {
+            background: #3498db;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 6px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: background 0.2s;
+            margin-right: 10px;
+            margin-bottom: 10px;
+        }
+        
+        button:hover {
+            background: #2980b9;
+        }
+        
+        .success-message {
+            background: #d5f4e6;
+            color: #27ae60;
+            padding: 15px;
+            border-radius: 6px;
+            margin-top: 15px;
+            display: none;
+        }
+        
+        .info-box {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 30px;
+        }
+        
+        .info-box h2 {
+            margin-top: 0;
+            color: white;
+        }
+        
+        .info-box ul {
+            list-style: none;
+            padding: 0;
+        }
+        
+        .info-box li {
+            margin-bottom: 8px;
+            padding-left: 20px;
+            position: relative;
+        }
+        
+        .info-box li:before {
+            content: "✅";
+            position: absolute;
+            left: 0;
+        }
+        
+        .test-instructions {
+            background: #fff3cd;
+            border: 1px solid #ffeaa7;
+            color: #856404;
+            padding: 15px;
+            border-radius: 6px;
+            margin-bottom: 20px;
+        }
+        
+        .test-instructions h3 {
+            margin-top: 0;
+            color: #856404;
+        }
+        
+        .test-instructions ol {
+            margin-bottom: 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🧭 Navigation Fix Test</h1>
+        
+        <div class="info-box">
+            <h2>Navigation Fix Verification</h2>
+            <ul>
+                <li><strong>Initial Navigation:</strong> Test should always start with page.goto()</li>
+                <li><strong>Proper Order:</strong> Actions should be in chronological order</li>
+                <li><strong>Page Grouping:</strong> Actions should be grouped by page</li>
+                <li><strong>No Missing Steps:</strong> All recorded actions should be included</li>
+            </ul>
+        </div>
+
+        <div class="test-instructions">
+            <h3>Test Instructions:</h3>
+            <ol>
+                <li><strong>Start Recording:</strong> Open the Playwright Recorder extension and start recording</li>
+                <li><strong>Perform Actions:</strong> Fill out the form below with any test data</li>
+                <li><strong>Stop Recording:</strong> Stop the recording and generate the test</li>
+                <li><strong>Verify Output:</strong> Check that the generated test starts with navigation</li>
+            </ol>
+        </div>
+
+        <!-- Simple Form Test -->
+        <div class="test-section">
+            <h2>📝 Form Test</h2>
+            <form id="testForm">
+                <div class="form-group">
+                    <label for="name">Name:</label>
+                    <input type="text" id="name" name="name" placeholder="Enter your name" data-testid="name-input">
+                </div>
+                
+                <div class="form-group">
+                    <label for="email">Email:</label>
+                    <input type="email" id="email" name="email" placeholder="Enter your email" data-testid="email-input">
+                </div>
+                
+                <div class="form-group">
+                    <label for="message">Message:</label>
+                    <textarea id="message" name="message" placeholder="Enter your message" data-testid="message-input" rows="4"></textarea>
+                </div>
+                
+                <div class="form-group">
+                    <label for="category">Category:</label>
+                    <select id="category" name="category" data-testid="category-select">
+                        <option value="">Select a category</option>
+                        <option value="general">General</option>
+                        <option value="support">Support</option>
+                        <option value="feedback">Feedback</option>
+                    </select>
+                </div>
+                
+                <button type="submit" data-testid="submit-btn">Submit Form</button>
+            </form>
+            
+            <div id="formSuccess" class="success-message">
+                ✅ Form submitted successfully!
+            </div>
+        </div>
+
+        <!-- Expected Output -->
+        <div class="test-section">
+            <h2>📋 Expected Output</h2>
+            <p>The generated test should look like this:</p>
+            <pre style="background: #f8f9fa; padding: 15px; border-radius: 6px; font-size: 12px; overflow-x: auto;">
+import { test, expect } from '@playwright/test';
+
+test('Recorded Test - recorded-test', async ({ page }) => {
+  // Should start with navigation to this page
+  await test.step("Go to current page", async () => {
+    await page.goto('http://localhost:8000/test-navigation-fix.html');
+    await page.waitForTimeout(3000);
+  });
+
+  // Then the form actions
+  await test.step("Fill form", async () => {
+    await page.getByTestId('name-input').fill('Test Name');
+    await page.getByTestId('email-input').fill('test@example.com');
+    await page.getByTestId('message-input').fill('Test message');
+    await page.getByTestId('category-select').selectOption('general');
+  });
+
+  await test.step("Submit form", async () => {
+    await page.getByTestId('submit-btn').click({ force: true });
+  });
+});
+            </pre>
+        </div>
+    </div>
+
+    <script>
+        // Form handling
+        document.getElementById('testForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            document.getElementById('formSuccess').style.display = 'block';
+        });
+    </script>
+</body>
+</html> 

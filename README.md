@@ -1,50 +1,94 @@
-# 🎭 Playwright Test Recorder Extension
+# 🎭 Playwright Recorder Extension
 
-A Chrome extension that records user interactions on web applications and generates Playwright test scripts automatically. Perfect for manual testers and automation engineers who want to quickly create test scripts while performing manual testing.
+A powerful Chrome extension that records user interactions and generates high-quality Playwright test scripts with AI-powered code generation.
 
 ## ✨ Features
 
-- **Real-time Recording**: Capture clicks, typing, form submissions, and navigation
-- **Enhanced Action Support**: Double-clicks, right-clicks, checkboxes, radio buttons, file uploads
-- **Multi-language Support**: Generate code in JavaScript, TypeScript, Python, and Java
-- **Smart Selectors**: Enhanced selector generation with accessibility and testing best practices
-- **Script Preview**: Preview generated code before downloading
-- **Step Editing**: Edit, delete, and reorder recorded steps
-- **Visual Feedback**: Recording indicator shows when the extension is active
-- **File Download**: Download final test files after editing
-- **Custom File Names**: Choose your own test file name
-- **Modern UI**: Beautiful, intuitive interface with modal dialogs
+### 🎯 Core Recording
+- **Real-time action capture** - Records clicks, typing, navigation, form submissions, and more
+- **Smart selector generation** - Uses robust, stable selectors (data-testid, getByRole, getByLabel)
+- **Frame support** - Handles iframes, shadow DOM, and nested frames
+- **Multi-language support** - JavaScript, TypeScript, Python, and Java
+- **Cross-platform** - Works on any website (except chrome:// URLs)
 
-## 🚀 Installation
+### 🤖 AI-Powered Code Generation (NEW!)
+- **Intelligent code generation** - Uses AI to create production-ready test scripts
+- **Context-aware** - Understands user intent and workflow patterns
+- **Smart assertions** - Automatically generates relevant assertions
+- **Error handling** - Includes proper error handling and waits
+- **Logical grouping** - Groups related actions into meaningful test steps
+- **Multiple AI providers** - Support for OpenAI GPT-4, GPT-3.5, and Claude models
 
-### Method 1: Load as Unpacked Extension (Development)
+## 🚀 Quick Start
 
-1. Clone or download this repository
-2. Open Chrome and navigate to `chrome://extensions/`
-3. Enable "Developer mode" in the top right corner
-4. Click "Load unpacked" and select the extension folder
-5. The extension icon should appear in your Chrome toolbar
+### Installation
 
-### Method 2: Install from Chrome Web Store (Coming Soon)
+1. **Clone or download** this repository
+2. **Open Chrome** and go to `chrome://extensions/`
+3. **Enable Developer mode** (toggle in top right)
+4. **Click "Load unpacked"** and select the extension folder
+5. **Pin the extension** to your toolbar for easy access
 
-*This extension will be available on the Chrome Web Store soon*
+### Basic Usage
 
-## 📖 Usage
+1. **Navigate** to the website you want to test
+2. **Click the extension icon** to open the popup
+3. **Configure AI settings** (optional but recommended)
+4. **Enter a test file name** and select your preferred language
+5. **Click "Start Recording"** and perform your test actions
+6. **Click "Stop Recording"** when finished
+7. **Preview, edit, and download** your generated test script
 
-### Basic Workflow
+## 🤖 AI Configuration
 
-1. **Open your web application** in Chrome
-2. **Click the extension icon** in the toolbar
-3. **Enter a file name** for your test (e.g., "login-test")
-4. **Select your preferred language** (JavaScript, TypeScript, Python, or Java)
-5. **Click "Start Recording"**
-6. **Perform your manual testing** - click buttons, fill forms, navigate pages
-7. **Click "Stop Recording"** when done
-8. **Preview the generated script** in the extension popup
-9. **Edit recorded steps** if needed (delete, reorder, modify)
-10. **Download the final test file** when satisfied
+### Setup AI-Powered Generation
 
-### Supported Actions
+1. **Enable AI** - Toggle the AI switch in the extension popup
+2. **Get an API key** - Sign up for an AI service:
+   - [OpenAI API](https://platform.openai.com/api-keys) (GPT-4, GPT-3.5)
+   - [Anthropic API](https://console.anthropic.com/) (Claude)
+3. **Enter your API key** - Paste it in the extension popup
+4. **Select your model** - Choose from available AI models
+5. **Test connection** - The extension will validate your API key
+
+### AI Benefits
+
+**Traditional Generation:**
+```javascript
+// Basic template-based code
+await page.click('[class="btn-primary"]');
+await page.fill('[class="input-field"]', 'test@example.com');
+await page.click('[class="submit-btn"]');
+```
+
+**AI-Powered Generation:**
+```javascript
+// Intelligent, context-aware code
+test('User registration flow', async ({ page }) => {
+  await test.step('Navigate to registration page', async () => {
+    await page.goto('https://example.com/register');
+    await expect(page).toHaveTitle(/Register/);
+  });
+
+  await test.step('Fill registration form', async () => {
+    await page.getByLabel('Email address').fill('test@example.com');
+    await page.getByLabel('Password').fill('securePassword123');
+    await page.getByLabel('Confirm password').fill('securePassword123');
+    
+    // AI-generated assertion
+    await expect(page.getByLabel('Email address')).toHaveValue('test@example.com');
+  });
+
+  await test.step('Submit registration', async () => {
+    await page.getByRole('button', { name: 'Create Account' }).click();
+    
+    // AI-generated wait and assertion
+    await expect(page.getByText('Registration successful')).toBeVisible();
+  });
+});
+```
+
+## 📋 Supported Actions
 
 The extension records the following user interactions:
 
@@ -66,131 +110,21 @@ The extension records the following user interactions:
 - ✅ **Dynamic content** waiting
 - ✅ **Frame interactions** (iframes, shadow DOM, nested frames)
 
-### Generated Code Examples
+## 🎯 Selector Strategy
 
-#### JavaScript/TypeScript
-```javascript
-const { test, expect } = require('@playwright/test');
+The extension uses a smart selector strategy that prioritizes stability and maintainability:
 
-test('Enhanced Recorded Test - form-interaction', async ({ page }) => {
-  // Navigate to the starting URL
-  await page.goto('https://example.com/forms');
-  
-  // Focus on username field
-  await page.focus('#username');
-  
-  // Type in username field
-  await page.fill('#username', 'testuser@example.com');
-  
-  // Check the "Remember me" checkbox
-  await page.check('#remember-me');
-  
-  // Select option in country dropdown
-  await page.selectOption('#country', 'US');
-  
-  // Select multiple options in interests dropdown
-  await page.selectOption('#interests', ['reading', 'gaming', 'sports']);
-  
-  // Upload file to file input
-  await page.setInputFiles('#profile-picture', 'path/to/your/file');
-  
-  // Double-click on profile name to edit
-  await page.dblclick('.profile-name');
-  
-  // Right-click on settings menu
-  await page.click('.settings-menu', { button: 'right' });
-  
-  // Press Enter to save
-  await page.press('.profile-name', 'Enter');
-});
-```
-
-#### Python
-```python
-from playwright.sync_api import sync_playwright, expect
-
-def test_recorded_form_interaction():
-    with sync_playwright() as p:
-        browser = p.chromium.launch()
-        page = browser.new_page()
-        
-        # Navigate to the starting URL
-        page.goto('https://example.com/forms')
-        
-        # Focus on username field
-        page.focus('#username')
-        
-        # Type in username field
-        page.fill('#username', 'testuser@example.com')
-        
-        # Check the "Remember me" checkbox
-        page.check('#remember-me')
-        
-        # Select option in country dropdown
-        page.select_option('#country', 'US')
-        
-        # Double-click on profile name to edit
-        page.dblclick('.profile-name')
-        
-        # Right-click on settings menu
-        page.click('.settings-menu', button='right')
-        
-        browser.close()
-```
-
-#### Frame Handling Example
-```javascript
-const { test, expect } = require('@playwright/test');
-
-test('Frame Handling Example', async ({ page }) => {
-  // Navigate to page with embedded content
-  await page.goto('https://example.com/embedded-content');
-  
-  // Click on element inside iframe
-  await page.frameLocator('iframe[name="embedded-form"]').click('#username');
-  
-  // Type in iframe input field
-  await page.frameLocator('iframe[name="embedded-form"]').fill('#username', 'testuser@example.com');
-  
-  // Click on element inside shadow DOM
-  await page.locator('#shadow-host').shadowRoot().click('.shadow-button');
-  
-  // Type in shadow DOM input
-  await page.locator('#shadow-host').shadowRoot().fill('.shadow-input', 'shadow value');
-  
-  // Handle nested frames
-  await page.frameLocator('iframe[name="parent-frame"]').frameLocator('iframe[name="child-frame"]').click('#nested-button');
-  
-  // Handle shadow DOM inside iframe
-  await page.frameLocator('iframe[name="complex-frame"]').locator('#shadow-container').shadowRoot().click('.complex-button');
-});
-```
-
-## 🛠️ Technical Details
-
-### Architecture
-
-- **Manifest V3**: Modern Chrome extension architecture
-- **Content Script**: Captures DOM events and user interactions
-- **Background Script**: Manages recording state and code generation
-- **Popup UI**: User interface for controlling recording
-
-### Selector Generation Strategy
-
-The extension uses an enhanced smart selector generation algorithm:
-
-1. **ID selectors** (highest priority): `#element-id`
-2. **Data attributes**: `[data-testid="..."]`, `[data-cy="..."]`, `[data-automation="..."]`, `[data-qa="..."]`
-3. **Name attributes**: `[name="..."]`
-4. **Aria labels**: `[aria-label="..."]`
-5. **Placeholder text**: `[placeholder="..."]`
-6. **Alt text**: `[alt="..."]`
-7. **Title attributes**: `[title="..."]`
-8. **Text content**: `button:has-text("Submit")`
-9. **Role attributes**: `[role="button"]`
-10. **Type attributes**: `input[type="email"]`
-11. **Class selectors** (filtered): `.class1.class2` (excludes framework classes)
-12. **Path-based selectors** (fallback): `div > form > input:nth-child(1)`
+### Priority Order:
+1. **data-testid** attributes: `[data-testid="submit-button"]`
+2. **getByRole** with accessible name: `getByRole('button', { name: 'Submit' })`
+3. **getByLabel** for form fields: `getByLabel('Email address')`
+4. **getByPlaceholder** for inputs: `getByPlaceholder('Enter your email')`
+5. **getByAltText** for images: `getByAltText('Logo')`
+6. **getByTitle** for elements with titles: `getByTitle('Help')`
+7. **Unique IDs**: `#submit-button`
+8. **Name attributes**: `[name="email"]`
+9. **Full class attributes**: `[class="btn btn-primary"]` (not `.btn.btn-primary`)
+10. **Path-based selectors** (fallback): `div > form > input:nth-child(1)`
 
 ### Frame Handling
 
@@ -201,38 +135,44 @@ The extension automatically detects and handles elements inside:
 - **Nested frames**: Handles multiple levels of iframe nesting
 - **Complex scenarios**: Shadow DOM inside iframes, multiple shadow roots
 
-**Frame Detection Priority:**
-1. **Iframe detection**: By ID, name, src attribute, or path-based selector
-2. **Shadow DOM detection**: By host element ID, class, or path-based selector
-3. **Nested frame support**: Multiple levels of frame nesting
-4. **Cross-frame actions**: Seamless interaction across frame boundaries
+## 🌐 Supported Languages
 
-### Supported Languages
+| Language | File Extension | Framework | AI Support |
+|----------|----------------|-----------|------------|
+| JavaScript | `.spec.js` | Playwright Test | ✅ |
+| TypeScript | `.spec.ts` | Playwright Test | ✅ |
+| Python | `.py` | Playwright Python | ✅ |
+| Java | `.java` | Playwright Java | ✅ |
 
-| Language | File Extension | Framework |
-|----------|----------------|-----------|
-| JavaScript | `.spec.js` | Playwright Test |
-| TypeScript | `.spec.ts` | Playwright Test |
-| Python | `.py` | Playwright Python |
-| Java | `.java` | Playwright Java |
+## 🔧 Configuration
 
-## 🔧 Customization
+### AI Settings
 
-### Adding New Languages
+```javascript
+// Available AI Models
+const AI_MODELS = {
+  'gpt-4': 'GPT-4 (Recommended)',
+  'gpt-3.5-turbo': 'GPT-3.5 Turbo',
+  'claude-3-opus': 'Claude 3 Opus',
+  'claude-3-sonnet': 'Claude 3 Sonnet'
+};
 
-To add support for additional languages, modify the `background.js` file:
+// AI Configuration
+const AI_CONFIG = {
+  enabled: true,
+  apiEndpoint: 'https://api.openai.com/v1/chat/completions',
+  model: 'gpt-4',
+  maxTokens: 4000,
+  temperature: 0.3
+};
+```
 
-1. Add the language option to the popup HTML
-2. Create a new generator function (e.g., `generateCSharpCode`)
-3. Add the case in the `generatePlaywrightCode` function
+### Customization Options
 
-### Custom Selectors
-
-The extension prioritizes certain attributes for selector generation. You can modify the `generateSelector` function in `content.js` to:
-
-- Add support for custom data attributes
-- Change selector priority
-- Implement custom selector strategies
+1. **Selector Priority** - Modify `generateSelector()` in `content.js`
+2. **AI Prompts** - Customize `createAIPrompt()` in `background.js`
+3. **Code Templates** - Edit language-specific generators
+4. **Action Filtering** - Adjust `shouldSkipAction()` logic
 
 ## 🐛 Troubleshooting
 
@@ -243,59 +183,73 @@ The extension prioritizes certain attributes for selector generation. You can mo
 - Check that you're on a supported website (not chrome:// URLs)
 - Verify the content script is loaded (check console for "Playwright Recorder Content Script Loaded")
 
-**Generated selectors not working:**
-- The extension uses fallback selectors when unique identifiers aren't available
-- Consider adding `data-testid` attributes to your application elements
-- Review and modify the generated selectors as needed
+**AI generation not working:**
+- Verify your API key is correct and has sufficient credits
+- Check that the selected AI model is available
+- Ensure you have an active internet connection
+- Check the browser console for error messages
 
-**File not downloading:**
-- Check Chrome's download settings
-- Ensure the extension has download permissions
-- Try refreshing the page and recording again
+**Generated code has issues:**
+- Try enabling AI-powered generation for better quality
+- Review and edit the recorded steps before generating
+- Check that the website uses stable selectors
+- Consider adding custom data-testid attributes to your application
+
+**Recording stops unexpectedly:**
+- Check for "Extension context invalidated" errors
+- Refresh the page and restart recording
+- Ensure the extension has necessary permissions
 
 ### Debug Mode
 
-To enable debug logging:
+Enable detailed logging by opening the browser console and looking for:
+- `[Playwright Recorder]` prefixed messages
+- Action recording logs
+- AI generation progress
+- Error messages and stack traces
 
-1. Open Chrome DevTools
-2. Go to the Console tab
-3. Look for messages starting with "Playwright Recorder"
+## 🔒 Security & Privacy
+
+### Data Handling
+- **Local processing** - All recording happens locally in your browser
+- **No data sent** - Actions are not sent to external servers (except AI API when enabled)
+- **Secure storage** - API keys are stored securely in Chrome's sync storage
+- **Optional AI** - AI features are completely optional and can be disabled
+
+### API Key Security
+- API keys are stored locally in Chrome's encrypted storage
+- Keys are only sent to the configured AI service
+- No keys are logged or stored in plain text
+- You can revoke API keys at any time from your AI service dashboard
 
 ## 🤝 Contributing
 
-Contributions are welcome! Here are some areas where you can help:
-
-- **New language support** (C#, Ruby, etc.)
-- **Additional action types** (drag & drop, file uploads)
-- **Improved selector generation**
-- **UI/UX enhancements**
-- **Bug fixes and performance improvements**
-
 ### Development Setup
 
-1. Fork the repository
-2. Create a feature branch
-3. Make your changes
-4. Test thoroughly
-5. Submit a pull request
+1. **Clone the repository**
+2. **Load as unpacked extension** in Chrome
+3. **Make changes** to the code
+4. **Reload the extension** to test changes
+5. **Submit a pull request** with your improvements
+
+### Areas for Contribution
+
+- **New language support** - Add support for additional programming languages
+- **AI provider integration** - Add support for more AI services
+- **Selector strategies** - Improve element detection and selector generation
+- **UI improvements** - Enhance the popup interface and user experience
+- **Documentation** - Improve README, add examples, and tutorials
 
 ## 📄 License
 
-This project is licensed under the MIT License - see the LICENSE file for details.
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
 ## 🙏 Acknowledgments
 
-- Built with [Playwright](https://playwright.dev/)
-- Inspired by existing test recording tools
-- Community feedback and suggestions
-
-## 📞 Support
-
-If you encounter any issues or have questions:
-
-1. Check the troubleshooting section above
-2. Search existing issues on GitHub
-3. Create a new issue with detailed information
+- **Playwright Team** - For the amazing testing framework
+- **OpenAI & Anthropic** - For providing AI capabilities
+- **Chrome Extensions Team** - For the extension platform
+- **Open Source Community** - For inspiration and contributions
 
 ---
 

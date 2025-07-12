@@ -313,7 +313,12 @@ function determineActionType(element, event) {
     }
     
     // Handle form submissions
-    if (tagName === 'form' || (tagName === 'button' && type === 'submit')) {
+    if (tagName === 'form') {
+      return 'submit';
+    }
+    
+    // Handle submit buttons (only if they have type="submit")
+    if (tagName === 'button' && type === 'submit') {
       return 'submit';
     }
     
@@ -549,6 +554,9 @@ function setupEventListeners() {
     
     const actionType = determineActionType(target, event);
     if (!actionType) return; // Skip if action type is null
+    
+    // Debug logging for action type determination
+    console.log('Action type determined:', actionType, 'for element:', target.tagName, target.type, target.getAttribute('data-testid'));
     
     const value = getElementValue(target);
     
