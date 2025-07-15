@@ -8,25 +8,27 @@
       width: 400px;
       padding: 20px;
       font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-      background: #f8f9fa;
+      background: #181a20;
+      color: #f1f1f1;
       margin: 0;
     }
     
     .header {
       text-align: center;
       margin-bottom: 20px;
-      color: #2c3e50;
+      color: #f1f1f1;
     }
     
     .header h1 {
       margin: 0;
       font-size: 24px;
       font-weight: 600;
+      color: #f1f1f1;
     }
     
     .header p {
       margin: 5px 0 0 0;
-      color: #7f8c8d;
+      color: #b0b3b8;
       font-size: 14px;
     }
     
@@ -38,24 +40,25 @@
       display: block;
       margin-bottom: 5px;
       font-weight: 500;
-      color: #34495e;
+      color: #e0e0e0;
       font-size: 14px;
     }
     
     input[type="text"], select {
       width: 100%;
       padding: 8px 12px;
-      border: 1px solid #ddd;
+      border: 1px solid #333;
       border-radius: 6px;
       font-size: 14px;
       box-sizing: border-box;
-      background: white;
+      background: #23262f;
+      color: #f1f1f1;
     }
     
     input[type="text"]:focus, select:focus {
       outline: none;
-      border-color: #3498db;
-      box-shadow: 0 0 0 2px rgba(52, 152, 219, 0.2);
+      border-color: #4f8cff;
+      box-shadow: 0 0 0 2px rgba(79, 140, 255, 0.2);
     }
     
     .button-group {
@@ -73,29 +76,32 @@
       font-weight: 500;
       cursor: pointer;
       transition: all 0.2s ease;
+      background: #23262f;
+      color: #f1f1f1;
     }
     
     .btn-primary {
-      background: #3498db;
-      color: white;
+      background: #4f8cff;
+      color: #fff;
     }
     
     .btn-primary:hover {
-      background: #2980b9;
+      background: #2563eb;
     }
     
     .btn-secondary {
-      background: #95a5a6;
-      color: white;
+      background: #23262f;
+      color: #f1f1f1;
+      border: 1px solid #333;
     }
     
     .btn-secondary:hover {
-      background: #7f8c8d;
+      background: #353945;
     }
     
     .btn-danger {
       background: #e74c3c;
-      color: white;
+      color: #fff;
     }
     
     .btn-danger:hover {
@@ -104,7 +110,7 @@
     
     .btn-success {
       background: #27ae60;
-      color: white;
+      color: #fff;
     }
     
     .btn-success:hover {
@@ -117,63 +123,69 @@
       margin-bottom: 15px;
       font-size: 14px;
       text-align: center;
+      background: #23262f;
+      color: #f1f1f1;
+      border: 1px solid #333;
     }
     
     .status.recording {
-      background: #d5f4e6;
+      background: #1e2a1e;
       color: #27ae60;
-      border: 1px solid #a8e6cf;
+      border: 1px solid #27ae60;
     }
     
     .status.stopped {
-      background: #fdf2f2;
+      background: #2a1e1e;
       color: #e74c3c;
-      border: 1px solid #fadbd8;
+      border: 1px solid #e74c3c;
     }
     
     .stats {
-      background: white;
+      background: #23262f;
       padding: 15px;
       border-radius: 8px;
       margin-bottom: 15px;
-      border: 1px solid #e9ecef;
+      border: 1px solid #333;
+      color: #f1f1f1;
     }
     
     .stats h3 {
       margin: 0 0 10px 0;
       font-size: 16px;
-      color: #2c3e50;
+      color: #f1f1f1;
     }
     
     .stats p {
       margin: 5px 0;
-      color: #7f8c8d;
+      color: #b0b3b8;
       font-size: 14px;
     }
     
     .preview-section {
-      background: white;
+      background: #23262f;
       padding: 15px;
       border-radius: 8px;
       margin-bottom: 15px;
-      border: 1px solid #e9ecef;
+      border: 1px solid #333;
       display: none;
+      color: #f1f1f1;
     }
     
     .preview-section h3 {
       margin: 0 0 10px 0;
       font-size: 16px;
-      color: #2c3e50;
+      color: #f1f1f1;
     }
     
     .preview-section pre {
-      background: #f8f9fa;
+      background: #181a20;
       padding: 10px;
       border-radius: 4px;
       font-size: 12px;
       overflow-x: auto;
       max-height: 200px;
-      border: 1px solid #e9ecef;
+      border: 1px solid #333;
+      color: #f1f1f1;
     }
     
     .modal {
@@ -184,11 +196,11 @@
       top: 0;
       width: 100%;
       height: 100%;
-      background-color: rgba(0,0,0,0.5);
+      background-color: rgba(24,26,32,0.85);
     }
     
     .modal-content {
-      background-color: white;
+      background-color: #23262f;
       margin: 5% auto;
       padding: 20px;
       border-radius: 8px;
@@ -196,6 +208,8 @@
       max-width: 500px;
       max-height: 80vh;
       overflow-y: auto;
+      color: #f1f1f1;
+      border: 1px solid #333;
     }
     
     .modal-header {
@@ -207,28 +221,29 @@
     
     .modal-header h2 {
       margin: 0;
-      color: #2c3e50;
+      color: #f1f1f1;
     }
     
     .close {
-      color: #aaa;
+      color: #b0b3b8;
       font-size: 28px;
       font-weight: bold;
       cursor: pointer;
     }
     
     .close:hover {
-      color: #000;
+      color: #fff;
     }
     
     .step-item {
       display: flex;
       align-items: center;
       padding: 10px;
-      border: 1px solid #e9ecef;
+      border: 1px solid #333;
       border-radius: 6px;
       margin-bottom: 8px;
-      background: white;
+      background: #23262f;
+      color: #f1f1f1;
     }
     
     .step-info {
@@ -237,12 +252,12 @@
     
     .step-type {
       font-weight: 500;
-      color: #2c3e50;
+      color: #f1f1f1;
       font-size: 14px;
     }
     
     .step-selector {
-      color: #7f8c8d;
+      color: #b0b3b8;
       font-size: 12px;
       margin-top: 2px;
     }
@@ -256,116 +271,14 @@
       padding: 5px 8px;
       font-size: 12px;
       flex: none;
+      background: #353945;
+      color: #f1f1f1;
+      border: 1px solid #333;
     }
     
-    .ai-config {
-      background: white;
-      padding: 15px;
-      border-radius: 8px;
-      margin-bottom: 15px;
-      border: 1px solid #e9ecef;
-    }
-    
-    .ai-config h3 {
-      margin: 0 0 10px 0;
-      font-size: 16px;
-      color: #2c3e50;
-    }
-    
-    .ai-toggle {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      margin-bottom: 10px;
-    }
-    
-    .toggle-switch {
-      position: relative;
-      display: inline-block;
-      width: 50px;
-      height: 24px;
-    }
-    
-    .toggle-switch input {
-      opacity: 0;
-      width: 0;
-      height: 0;
-    }
-    
-    .slider {
-      position: absolute;
-      cursor: pointer;
-      top: 0;
-      left: 0;
-      right: 0;
-      bottom: 0;
-      background-color: #ccc;
-      transition: .4s;
-      border-radius: 24px;
-    }
-    
-    .slider:before {
-      position: absolute;
-      content: "";
-      height: 18px;
-      width: 18px;
-      left: 3px;
-      bottom: 3px;
-      background-color: white;
-      transition: .4s;
-      border-radius: 50%;
-    }
-    
-    input:checked + .slider {
-      background-color: #3498db;
-    }
-    
-    input:checked + .slider:before {
-      transform: translateX(26px);
-    }
-    
-    .ai-settings {
-      display: none;
-      margin-top: 10px;
-      padding-top: 10px;
-      border-top: 1px solid #e9ecef;
-    }
-    
-    .ai-settings.show {
-      display: block;
-    }
-    
-    .api-key-input {
-      position: relative;
-    }
-    
-    .api-key-input input {
-      padding-right: 40px;
-    }
-    
-    .toggle-password {
-      position: absolute;
-      right: 10px;
-      top: 50%;
-      transform: translateY(-50%);
-      background: none;
-      border: none;
-      cursor: pointer;
-      color: #7f8c8d;
-      font-size: 12px;
-    }
-    
-    .ai-status {
-      font-size: 12px;
-      margin-top: 5px;
-    }
-    
-    .ai-status.connected {
-      color: #27ae60;
-    }
-    
-    .ai-status.disconnected {
-      color: #e74c3c;
+    .step-actions button:hover {
+      background: #4f8cff;
+      color: #fff;
     }
   </style>
 </head>
@@ -375,45 +288,18 @@
     <p>Record and generate Playwright test scripts</p>
   </div>
 
-  <!-- AI Configuration Section -->
-  <div class="ai-config">
-    <h3>🤖 AI-Powered Code Generation</h3>
-    <div class="ai-toggle">
-      <label class="toggle-switch">
-        <input type="checkbox" id="aiEnabled">
-        <span class="slider"></span>
-      </label>
-      <span>Enable AI code generation</span>
-    </div>
-    <div class="ai-settings" id="aiSettings">
-      <div class="form-group">
-        <label for="aiApiKey">API Key:</label>
-        <div class="api-key-input">
-          <input type="password" id="aiApiKey" placeholder="Enter your AI API key">
-          <button type="button" class="toggle-password" id="togglePassword">👁️</button>
-        </div>
-      </div>
-      <div class="form-group">
-        <label for="aiModel">AI Model:</label>
-        <select id="aiModel">
-          <option value="gpt-4">GPT-4 (Recommended)</option>
-          <option value="gpt-3.5-turbo">GPT-3.5 Turbo</option>
-          <option value="claude-3-opus">Claude 3 Opus</option>
-          <option value="claude-3-sonnet">Claude 3 Sonnet</option>
-        </select>
-      </div>
-      <div class="ai-status" id="aiStatus">Not configured</div>
-    </div>
-  </div>
-
   <!-- Recording Configuration -->
   <div class="form-group">
-    <label for="filename">Test File Name:</label>
+    <label for="filename">Test File Name:
+      <span title="The name of the generated test file. You can change this before recording." style="cursor:help;color:#4f8cff;">❓</span>
+    </label>
     <input type="text" id="filename" placeholder="my-test" value="recorded-test">
   </div>
   
   <div class="form-group">
-    <label for="language">Language:</label>
+    <label for="language">Language:
+      <span title="Choose the programming language for your generated test code." style="cursor:help;color:#4f8cff;">❓</span>
+    </label>
     <select id="language">
       <option value="javascript">JavaScript</option>
       <option value="typescript">TypeScript</option>
@@ -424,8 +310,8 @@
 
   <!-- Recording Controls -->
   <div class="button-group">
-    <button id="startBtn" class="btn-primary">▶️ Start Recording</button>
-    <button id="stopBtn" class="btn-secondary" disabled>⏹️ Stop Recording</button>
+    <button id="startBtn" class="btn-primary" title="Start recording your actions on the current page.">▶️ Start Recording</button>
+    <button id="stopBtn" class="btn-secondary" disabled title="Stop recording and generate your test script.">⏹️ Stop Recording</button>
   </div>
 
   <!-- Status Display -->
@@ -443,15 +329,23 @@
 
   <!-- Action Buttons -->
   <div class="button-group">
-    <button id="previewBtn" class="btn-secondary" disabled>👁️ Preview</button>
-    <button id="editBtn" class="btn-secondary" disabled>✏️ Edit</button>
-    <button id="downloadBtn" class="btn-success" disabled>💾 Download</button>
+    <button id="previewBtn" class="btn-secondary" disabled title="Preview the generated test code.">👁️ Preview</button>
+    <button id="editBtn" class="btn-secondary" disabled title="Edit the recorded steps before generating code.">✏️ Edit</button>
+    <button id="downloadBtn" class="btn-success" disabled title="Download the generated test script.">�� Download</button>
+    <button id="exportBtn" class="btn-secondary" title="Export the current recording as a file.">⬇️ Export Recording</button>
+    <button id="importBtn" class="btn-secondary" title="Import a previously saved recording.">⬆️ Import Recording</button>
+    <input type="file" id="importFileInput" accept="application/json" style="display:none;" />
   </div>
 
   <!-- Preview Section -->
   <div id="previewSection" class="preview-section">
     <h3>📝 Generated Code Preview</h3>
+    <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px;">
+      <span></span>
+      <button id="copyCodeBtn" class="btn-secondary" style="flex: none; margin-left: 8px;">📋 Copy</button>
+    </div>
     <pre id="codePreview"></pre>
+    <div id="aiSummary" style="margin-top: 10px; color: #b0b3b8; font-size: 13px; display: none;"></div>
     <button id="closePreviewBtn" class="btn-secondary">Close Preview</button>
   </div>
 
@@ -467,6 +361,25 @@
         <button id="saveEditBtn" class="btn-success">Save Changes</button>
         <button id="cancelEditBtn" class="btn-secondary">Cancel</button>
       </div>
+    </div>
+  </div>
+
+  <!-- Feedback Button -->
+  <button id="feedbackBtn" class="btn-secondary" style="width:100%;margin-top:10px;">💬 Send Feedback / Report Issue</button>
+
+  <!-- Feedback Modal -->
+  <div id="feedbackModal" class="modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2>💬 Feedback / Report Issue</h2>
+        <span class="close" id="closeFeedbackModal">&times;</span>
+      </div>
+      <textarea id="feedbackText" style="width:100%;height:100px;background:#181a20;color:#f1f1f1;border:1px solid #333;border-radius:6px;padding:8px;resize:vertical;" placeholder="Describe your feedback or issue..."></textarea>
+      <div class="button-group" style="margin-top:10px;">
+        <button id="sendFeedbackBtn" class="btn-success">Send</button>
+        <button id="cancelFeedbackBtn" class="btn-secondary">Cancel</button>
+      </div>
+      <div id="feedbackStatus" style="margin-top:10px;color:#b0b3b8;font-size:13px;display:none;"></div>
     </div>
   </div>
 

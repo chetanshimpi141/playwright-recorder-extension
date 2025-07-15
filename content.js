@@ -463,17 +463,17 @@ function shouldSkipAction(actionData) {
   if (!isRecording) {
     return true;
   }
-  
+
   // Skip duplicate actions within short time
   const now = Date.now();
   const lastAction = window.lastRecordedAction;
-  if (lastAction && 
-      lastAction.type === actionData.type && 
+  if (lastAction &&
+      lastAction.type === actionData.type &&
       lastAction.selector === actionData.selector &&
       now - lastAction.timestamp < 500) { // Skip duplicates within 500ms
     return true;
   }
-  
+
   // Skip navigation to same URL
   if (actionData.type === 'navigate') {
     const currentUrl = window.location.href;
@@ -482,7 +482,7 @@ function shouldSkipAction(actionData) {
     }
     window.lastNavigationUrl = currentUrl;
   }
-  
+
   // Skip unnecessary hover events
   if (actionData.type === 'hover') {
     const element = actionData.element;
@@ -490,20 +490,54 @@ function shouldSkipAction(actionData) {
       return true;
     }
   }
-  
+
   // Skip focus/blur on non-form elements
-  if ((actionData.type === 'focus' || actionData.type === 'blur') && 
+  if ((actionData.type === 'focus' || actionData.type === 'blur') &&
       !['input', 'textarea', 'select'].includes(actionData.element?.tagName?.toLowerCase())) {
     return true;
   }
-  
+
+  // Enhanced: Skip clicks on non-interactive, hidden, or disabled elements
+  if (actionData.type === 'click' || actionData.type === 'doubleClick' || actionData.type === 'rightClick') {
+    const el = actionData.element;
+    if (el) {
+      const tag = el.tagName?.toLowerCase();
+      const isInteractive = [
+        'a', 'button', 'input', 'select', 'textarea'
+      ].includes(tag) ||
+        el.hasAttribute('role') ||
+        el.hasAttribute('tabindex') ||
+        getComputedStyle(el).cursor === 'pointer';
+      const isHidden = el.offsetParent === null || getComputedStyle(el).visibility === 'hidden' || getComputedStyle(el).display === 'none';
+      const isDisabled = el.disabled === true || el.getAttribute('aria-disabled') === 'true';
+      // Check if element is in viewport
+      const rect = el.getBoundingClientRect();
+      const inViewport = rect.bottom > 0 && rect.right > 0 && rect.left < (window.innerWidth || document.documentElement.clientWidth) && rect.top < (window.innerHeight || document.documentElement.clientHeight);
+      if (!isInteractive || isHidden || isDisabled || !inViewport) {
+        return true;
+      }
+    }
+  }
+
+  // Enhanced: Skip insignificant scrolls
+  if (actionData.type === 'scroll') {
+    if (typeof actionData.scrollY === 'number') {
+      if (!window._lastRecordedScrollY) window._lastRecordedScrollY = 0;
+      const diff = Math.abs(actionData.scrollY - window._lastRecordedScrollY);
+      if (diff < 100) {
+        return true;
+      }
+      window._lastRecordedScrollY = actionData.scrollY;
+    }
+  }
+
   // Store this action to check for duplicates
   window.lastRecordedAction = {
     type: actionData.type,
     selector: actionData.selector,
     timestamp: now
   };
-  
+
   return false;
 }
 
@@ -540,6 +574,10 @@ function cleanActionData(actionData) {
 // Debounce map for typing
 const typingDebounceMap = new Map();
 
+// Track the last scroll event and its timestamp
+let lastScrollEvent = null;
+let lastScrollTimestamp = 0;
+
 // Event listeners for different user interactions
 function setupEventListeners() {
   // Enhanced click events with action type detection
@@ -559,7 +597,13 @@ function setupEventListeners() {
     console.log('Action type determined:', actionType, 'for element:', target.tagName, target.type, target.getAttribute('data-testid'));
     
     const value = getElementValue(target);
-    
+
+    // Check if a scroll happened within the last 2 seconds
+    let recentScroll = null;
+    if (lastScrollEvent && Date.now() - lastScrollTimestamp <= 2000) {
+      recentScroll = { ...lastScrollEvent };
+    }
+
     recordAction({
       type: actionType,
       selector: selector,
@@ -572,7 +616,8 @@ function setupEventListeners() {
       inputType: target.type || undefined,
       element: target,
       hasTooltip: target.hasAttribute('title') || target.hasAttribute('aria-label'),
-      isImportant: target.getAttribute('role') === 'button' || target.hasAttribute('tabindex')
+      isImportant: target.getAttribute('role') === 'button' || target.hasAttribute('tabindex'),
+      recentScroll: recentScroll // Attach recent scroll info if available
     });
   }, true);
   
@@ -829,19 +874,22 @@ function setupEventListeners() {
   let scrollTimeout;
   document.addEventListener('scroll', function(event) {
     if (!isRecording) return;
-    
+
     clearTimeout(scrollTimeout);
     scrollTimeout = setTimeout(() => {
       const target = event.target;
       const selector = target === document ? 'body' : generateSelector(target);
-      
-      recordAction({
+      const scrollData = {
         type: 'scroll',
         selector: selector,
         scrollX: window.scrollX,
         scrollY: window.scrollY,
-        tagName: target.tagName.toLowerCase()
-      });
+        tagName: target.tagName ? target.tagName.toLowerCase() : 'body',
+        timestamp: Date.now()
+      };
+      lastScrollEvent = scrollData;
+      lastScrollTimestamp = scrollData.timestamp;
+      recordAction(scrollData);
     }, 100);
   }, true);
   
@@ -882,46 +930,62 @@ function showRecordingIndicator() {
     recordingIndicator.textContent = '🔴 Recording...';
     return;
   }
-  
+
   console.log('Showing recording indicator...');
-  
+
   const overlay = document.createElement('div');
   overlay.className = 'playwright-recorder-overlay';
   overlay.style.cssText = `
     position: fixed;
-    top: 10px;
-    right: 10px;
-    background: rgba(255, 0, 0, 0.8);
+    top: 16px;
+    right: 16px;
+    background: rgba(255, 0, 0, 0.92);
     color: white;
-    padding: 8px 12px;
-    border-radius: 4px;
+    padding: 14px 22px 14px 16px;
+    border-radius: 8px;
     font-family: Arial, sans-serif;
-    font-size: 12px;
+    font-size: 18px;
     z-index: 999999;
-    pointer-events: none;
-    animation: pulse 2s infinite;
+    pointer-events: auto;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.18);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    cursor: pointer;
+    animation: pulse 1.2s infinite cubic-bezier(.4,0,.6,1);
   `;
-  
+  overlay.title = 'Playwright Recorder is actively recording actions on this page.';
+
+  // Add help icon with tooltip
+  const helpIcon = document.createElement('span');
+  helpIcon.textContent = '❓';
+  helpIcon.style.cssText = 'margin-left:8px;font-size:16px;cursor:pointer;';
+  helpIcon.title = 'The recorder captures your actions for test generation. Click to learn more.';
+  helpIcon.onclick = (e) => {
+    e.stopPropagation();
+    alert('The Playwright Recorder is capturing your actions (clicks, scrolls, typing, etc.) to generate automated tests.');
+  };
+  overlay.appendChild(document.createTextNode('🔴 Recording...'));
+  overlay.appendChild(helpIcon);
+
   const style = document.createElement('style');
   style.textContent = `
     @keyframes pulse {
-      0% { opacity: 1; }
-      50% { opacity: 0.5; }
-      100% { opacity: 1; }
+      0% { box-shadow: 0 0 0 0 rgba(255,0,0,0.7); opacity: 1; }
+      70% { box-shadow: 0 0 0 12px rgba(255,0,0,0.15); opacity: 0.85; }
+      100% { box-shadow: 0 0 0 0 rgba(255,0,0,0.7); opacity: 1; }
     }
   `;
-  
-  overlay.textContent = '🔴 Recording...';
-  
+
   // Only add style if it doesn't exist
   if (!document.querySelector('#playwright-recorder-style')) {
     style.id = 'playwright-recorder-style';
     document.head.appendChild(style);
   }
-  
+
   document.body.appendChild(overlay);
   recordingIndicator = overlay;
-  
+
   console.log('Recording indicator shown');
 }
 
@@ -1102,6 +1166,9 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
   return true;
 });
 
+// Always set up event listeners immediately
+setupEventListeners();
+
 // Initialize when DOM is ready
 if (document.readyState === 'loading') {
   document.addEventListener('DOMContentLoaded', initializeExtension);
@@ -1116,8 +1183,6 @@ function initializeExtension() {
   }
   
   console.log('Initializing Playwright Recorder extension...');
-  
-  setupEventListeners();
   
   // Check recording status on initialization
   setTimeout(checkRecordingStatus, 100);

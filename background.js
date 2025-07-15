@@ -464,6 +464,26 @@ async function generatePlaywrightCode(actions, language) {
   }
 }
 
+// Add a function to review code with AI
+async function reviewCodeWithAI(code, language) {
+  const reviewPrompt = {
+    role: "system",
+    content: `You are an expert code reviewer. Review the following ${language} code for best practices, readability, and robustness. Suggest improvements and return the improved code only.\n\nCode:\n${code}`
+  };
+  try {
+    const aiResponse = await callAIAPI(reviewPrompt);
+    if (aiResponse && aiResponse.code) {
+      return aiResponse.code;
+    } else {
+      console.warn('AI review failed, returning original code');
+      return code;
+    }
+  } catch (error) {
+    console.error('AI code review error:', error);
+    return code;
+  }
+}
+
 async function generateAIPoweredCode(actions, language) {
   try {
     console.log('Generating AI-powered code for', actions.length, 'actions');
@@ -474,15 +494,17 @@ async function generateAIPoweredCode(actions, language) {
     // Generate AI prompt
     const prompt = createAIPrompt(context);
     
-    // Call AI API
+    // Call AI API to generate code
     const aiResponse = await callAIAPI(prompt);
     
-    if (aiResponse && aiResponse.code) {
-      return aiResponse.code;
-    } else {
+    let code = aiResponse && aiResponse.code ? aiResponse.code : null;
+    if (!code) {
       console.warn('AI generation failed, falling back to traditional generation');
       return generateTraditionalCode(actions, language);
     }
+    // Automatically review and improve the code with AI
+    code = await reviewCodeWithAI(code, language);
+    return code;
   } catch (error) {
     console.error('AI code generation error:', error);
     return generateTraditionalCode(actions, language);
