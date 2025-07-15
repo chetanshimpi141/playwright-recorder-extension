@@ -1,6 +1,6 @@
 # Privacy Policy for Playwright Test Recorder
 
-**Effective Date:** [Insert Date]
+**Effective Date:** 16-jul2025
 
 ## Data Collection
 Playwright Test Recorder does **not** collect, transmit, or store any personal information or browsing data outside of your local device. All recorded actions, preferences, and generated test scripts are stored locally in your browser and are never sent to any external server.
@@ -18,4 +18,4 @@ This extension does not use any third-party analytics, advertising, or tracking 
 All data generated or stored by the extension remains under your control. You may delete your recordings and generated scripts at any time.
 
 ## Contact
-If you have any questions or concerns about this privacy policy, please contact [your email/contact info]. 
+If you have any questions or concerns about this privacy policy, please contact shimpic676@gmail.com / +91 7219795354. 
