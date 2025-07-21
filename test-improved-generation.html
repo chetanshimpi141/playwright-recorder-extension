@@ -3,70 +3,65 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Improved Code Generation Test</title>
+    <title>Improved Code Generation Test (Dark Demo)</title>
     <style>
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            max-width: 800px;
+            max-width: 900px;
             margin: 0 auto;
             padding: 20px;
-            background: #f8f9fa;
+            background: #181a20;
+            color: #f1f1f1;
         }
-        
         .container {
-            background: white;
+            background: #23262f;
             padding: 30px;
             border-radius: 12px;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            box-shadow: 0 4px 16px rgba(0,0,0,0.18);
         }
-        
         h1 {
-            color: #2c3e50;
+            color: #4f8cff;
             text-align: center;
             margin-bottom: 30px;
         }
-        
         .test-section {
             margin-bottom: 30px;
             padding: 20px;
-            border: 2px solid #e9ecef;
+            border: 2px solid #353945;
             border-radius: 8px;
+            background: #181a20;
         }
-        
         .test-section h2 {
-            color: #3498db;
+            color: #4f8cff;
             margin-top: 0;
         }
-        
         .form-group {
             margin-bottom: 15px;
         }
-        
         label {
             display: block;
             margin-bottom: 5px;
             font-weight: 500;
-            color: #34495e;
+            color: #e0e0e0;
         }
-        
         input, select, textarea {
             width: 100%;
             padding: 10px;
-            border: 1px solid #ddd;
+            border: 1px solid #333;
             border-radius: 6px;
             font-size: 14px;
             box-sizing: border-box;
+            background: #23262f;
+            color: #f1f1f1;
         }
-        
         input:focus, select:focus, textarea:focus {
             outline: none;
-            border-color: #3498db;
-            box-shadow: 0 0 0 2px rgba(52, 152, 219, 0.2);
+            border-color: #4f8cff;
+            box-shadow: 0 0 0 2px rgba(79, 140, 255, 0.18);
         }
-        
         button {
-            background: #3498db;
-            color: white;
+            background: #4f8cff;
+            color: #fff;
             border: none;
             padding: 12px 24px;
             border-radius: 6px;
@@ -77,122 +72,318 @@
             margin-right: 10px;
             margin-bottom: 10px;
         }
-        
         button:hover {
-            background: #2980b9;
+            background: #2563eb;
         }
-        
         .success-message {
-            background: #d5f4e6;
+            background: #1e2a1e;
             color: #27ae60;
             padding: 15px;
             border-radius: 6px;
             margin-top: 15px;
             display: none;
+            border: 1px solid #27ae60;
         }
-        
         .info-box {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: linear-gradient(135deg, #4f8cff 0%, #764ba2 100%);
             color: white;
             padding: 20px;
             border-radius: 8px;
             margin-bottom: 30px;
         }
-        
         .info-box h2 {
             margin-top: 0;
             color: white;
         }
-        
         .info-box ul {
             list-style: none;
             padding: 0;
         }
-        
         .info-box li {
             margin-bottom: 8px;
             padding-left: 20px;
             position: relative;
         }
-        
         .info-box li:before {
             content: "✅";
             position: absolute;
             left: 0;
         }
-        
         .search-section {
-            background: #f8f9fa;
+            background: #23262f;
             padding: 20px;
             border-radius: 8px;
             margin-bottom: 20px;
         }
-        
         .search-results {
             margin-top: 15px;
             padding: 15px;
-            background: white;
+            background: #181a20;
             border-radius: 6px;
-            border: 1px solid #e9ecef;
+            border: 1px solid #353945;
+            color: #f1f1f1;
         }
-        
         .product-item {
             padding: 10px;
-            border: 1px solid #ddd;
+            border: 1px solid #353945;
             border-radius: 4px;
             margin-bottom: 10px;
             cursor: pointer;
             transition: background 0.2s;
+            background: #23262f;
         }
-        
         .product-item:hover {
-            background: #f8f9fa;
+            background: #353945;
         }
-        
         .navigation-buttons {
             display: flex;
             gap: 10px;
             margin-bottom: 20px;
             flex-wrap: wrap;
         }
-        
         .navigation-buttons button {
             flex: 1;
             min-width: 120px;
         }
-        
         .btn-secondary {
-            background: #95a5a6;
+            background: #353945;
         }
-        
         .btn-secondary:hover {
-            background: #7f8c8d;
+            background: #23262f;
         }
-        
         .btn-success {
             background: #27ae60;
         }
-        
         .btn-success:hover {
             background: #229954;
+        }
+        /* LinkedIn-style header */
+        .header-bar {
+            background: #23262f;
+            padding: 16px 24px;
+            border-radius: 12px 12px 0 0;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 24px;
+        }
+        .header-bar .logo {
+            font-size: 22px;
+            font-weight: bold;
+            color: #4f8cff;
+            letter-spacing: 1px;
+        }
+        .header-bar .profile-menu {
+            position: relative;
+        }
+        .profile-pic {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            background: #4f8cff;
+            display: inline-block;
+            vertical-align: middle;
+            margin-right: 8px;
+        }
+        .profile-dropdown {
+            display: none;
+            position: absolute;
+            right: 0;
+            top: 48px;
+            background: #23262f;
+            border: 1px solid #353945;
+            border-radius: 8px;
+            min-width: 180px;
+            z-index: 10;
+        }
+        .profile-dropdown.show {
+            display: block;
+        }
+        .profile-dropdown a {
+            display: block;
+            padding: 12px 18px;
+            color: #f1f1f1;
+            text-decoration: none;
+            border-bottom: 1px solid #353945;
+        }
+        .profile-dropdown a:last-child {
+            border-bottom: none;
+        }
+        .profile-dropdown a:hover {
+            background: #353945;
+        }
+        .notifications {
+            position: relative;
+            margin-right: 18px;
+        }
+        .notif-bell {
+            font-size: 22px;
+            cursor: pointer;
+            color: #4f8cff;
+        }
+        .notif-dropdown {
+            display: none;
+            position: absolute;
+            right: 0;
+            top: 36px;
+            background: #23262f;
+            border: 1px solid #353945;
+            border-radius: 8px;
+            min-width: 220px;
+            z-index: 10;
+        }
+        .notif-dropdown.show {
+            display: block;
+        }
+        .notif-dropdown .notif-item {
+            padding: 12px 18px;
+            color: #f1f1f1;
+            border-bottom: 1px solid #353945;
+        }
+        .notif-dropdown .notif-item:last-child {
+            border-bottom: none;
+        }
+        .notif-dropdown .notif-item:hover {
+            background: #353945;
+        }
+        /* Post creation area */
+        .post-area {
+            background: #23262f;
+            border: 1px solid #353945;
+            border-radius: 8px;
+            padding: 18px;
+            margin-bottom: 30px;
+        }
+        .post-area textarea {
+            background: #181a20;
+            color: #f1f1f1;
+            border: 1px solid #353945;
+            border-radius: 6px;
+            width: 100%;
+            min-height: 60px;
+            margin-bottom: 10px;
+            padding: 10px;
+        }
+        .post-area .post-btn {
+            background: #4f8cff;
+            color: #fff;
+            border: none;
+            border-radius: 6px;
+            padding: 10px 18px;
+            font-size: 15px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        .post-area .post-btn:hover {
+            background: #2563eb;
+        }
+        .post-list {
+            margin-top: 18px;
+        }
+        .post-item {
+            background: #181a20;
+            border: 1px solid #353945;
+            border-radius: 6px;
+            padding: 14px;
+            margin-bottom: 12px;
+        }
+        .login-modal {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(24,26,32,0.92);
+            z-index: 100;
+            align-items: center;
+            justify-content: center;
+        }
+        .login-modal.show {
+            display: flex;
+        }
+        .login-modal .modal-content {
+            background: #23262f;
+            border-radius: 10px;
+            padding: 32px 28px;
+            box-shadow: 0 2px 16px rgba(0,0,0,0.18);
+            min-width: 320px;
+        }
+        .login-modal label {
+            color: #e0e0e0;
+        }
+        .login-modal input[type="email"], .login-modal input[type="password"] {
+            background: #181a20;
+            color: #f1f1f1;
+            border: 1px solid #353945;
+        }
+        .login-modal button {
+            background: #4f8cff;
+            color: #fff;
+            border: none;
+            border-radius: 6px;
+            padding: 10px 18px;
+            font-size: 15px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: background 0.2s;
+            margin-top: 10px;
+        }
+        .login-modal button:hover {
+            background: #2563eb;
+        }
+        .login-modal .msg {
+            text-align: center;
+            font-size: 14px;
+            margin-top: 8px;
+            color: #27ae60;
+            display: none;
+        }
+        .login-modal .msg.error {
+            color: #e74c3c;
         }
     </style>
 </head>
 <body>
+    <div class="header-bar">
+        <span class="logo">Demo</span>
+        <div style="display: flex; align-items: center;">
+            <div class="notifications">
+                <span class="notif-bell" onclick="toggleNotifDropdown()">🔔</span>
+                <div class="notif-dropdown" id="notifDropdown">
+                    <div class="notif-item">New connection request from Alice</div>
+                    <div class="notif-item">Your post got 5 likes</div>
+                    <div class="notif-item">Job alert: Frontend Developer</div>
+                </div>
+            </div>
+            <div class="profile-menu" onclick="toggleProfileDropdown(event)">
+                <span class="profile-pic"></span>
+                <span style="font-weight:500;">Demo User</span>
+                <div class="profile-dropdown" id="profileDropdown">
+                    <a href="#" onclick="showLoginModal(event)">Login as another user</a>
+                    <a href="#" onclick="alert('Profile viewed!');return false;">View Profile</a>
+                    <a href="#" onclick="alert('Settings opened!');return false;">Settings</a>
+                    <a href="#" onclick="alert('Logged out!');return false;">Logout</a>
+                </div>
+            </div>
+        </div>
+    </div>
     <div class="container">
         <h1>🔧 Improved Code Generation Test</h1>
-        
         <div class="info-box">
-            <h2>What's Fixed</h2>
+            <h2>About This Extension</h2>
             <ul>
-                <li><strong>Chronological Order:</strong> Actions are now generated in the exact order they were recorded</li>
-                <li><strong>No Initial URL:</strong> Won't start with current page URL as goto statement</li>
-                <li><strong>Page Grouping:</strong> Actions are properly grouped by the page they occur on</li>
-                <li><strong>Smart Navigation:</strong> Only includes explicit navigation when user actually navigated</li>
-                <li><strong>Logical Steps:</strong> Related actions are grouped into meaningful test steps</li>
+                <li><strong>Record User Actions:</strong> Seamlessly capture clicks, typing, scrolls, navigation, and more as you interact with any web page.</li>
+                <li><strong>AI-Powered Code Generation:</strong> Instantly generate high-quality Playwright test scripts with built-in AI review and improvements.</li>
+                <li><strong>Modern UX:</strong> Enjoy a beautiful dark theme, animated recording indicator, tooltips, and a user-friendly popup interface.</li>
+                <li><strong>Advanced Features:</strong> Export/import recordings, multi-language support, feedback/reporting, and robust action validation.</li>
+                <li><strong>Perfect for Demos & Automation:</strong> Use this page to test and showcase the extension's capabilities for professional automation workflows.</li>
             </ul>
         </div>
-
+        <!-- Post creation area -->
+        <div class="post-area">
+            <textarea id="postInput" placeholder="Share something..." data-testid="post-input"></textarea>
+            <button class="post-btn" onclick="createPost()" data-testid="post-btn">Post</button>
+            <div class="post-list" id="postList"></div>
+        </div>
         <!-- Navigation Test -->
         <div class="test-section">
             <h2>🧭 Navigation Test</h2>
@@ -203,14 +394,12 @@
                 <li>Click "Go to Example" (another navigation)</li>
                 <li>Fill out the form below</li>
             </ol>
-            
             <div class="navigation-buttons">
                 <button onclick="goToGoogle()" data-testid="google-btn">Go to Google</button>
                 <button onclick="goToExample()" data-testid="example-btn">Go to Example</button>
                 <button onclick="goToGitHub()" data-testid="github-btn">Go to GitHub</button>
             </div>
         </div>
-
         <!-- Search Test -->
         <div class="test-section">
             <h2>🔍 Search Test</h2>
@@ -220,7 +409,6 @@
                     <input type="text" id="searchInput" placeholder="Enter search term..." data-testid="search-input">
                 </div>
                 <button onclick="performSearch()" data-testid="search-btn">Search</button>
-                
                 <div id="searchResults" class="search-results" style="display: none;">
                     <h3>Search Results</h3>
                     <div class="product-item" data-testid="result-item">
@@ -231,7 +419,6 @@
                 </div>
             </div>
         </div>
-
         <!-- Form Test -->
         <div class="test-section">
             <h2>📝 Form Test</h2>
@@ -240,17 +427,14 @@
                     <label for="name">Full Name:</label>
                     <input type="text" id="name" name="name" placeholder="Enter your full name" data-testid="name-input">
                 </div>
-                
                 <div class="form-group">
                     <label for="email">Email:</label>
                     <input type="email" id="email" name="email" placeholder="Enter your email" data-testid="email-input">
                 </div>
-                
                 <div class="form-group">
                     <label for="message">Message:</label>
                     <textarea id="message" name="message" placeholder="Enter your message" data-testid="message-input" rows="4"></textarea>
                 </div>
-                
                 <div class="form-group">
                     <label for="category">Category:</label>
                     <select id="category" name="category" data-testid="category-select">
@@ -260,46 +444,108 @@
                         <option value="feedback">Feedback</option>
                     </select>
                 </div>
-                
                 <button type="submit" data-testid="submit-btn">Submit Form</button>
             </form>
-            
             <div id="formSuccess" class="success-message">
                 ✅ Form submitted successfully!
             </div>
         </div>
-
         <!-- Action Test -->
         <div class="test-section">
             <h2>⚡ Action Test</h2>
             <p>Test various UI actions:</p>
-            
             <button onclick="showAlert()" data-testid="alert-btn">Show Alert</button>
             <button onclick="toggleContent()" data-testid="toggle-btn">Toggle Content</button>
             <button onclick="scrollToBottom()" data-testid="scroll-btn">Scroll to Bottom</button>
-            
-            <div id="toggleContent" style="display: none; margin-top: 15px; padding: 15px; background: #f8f9fa; border-radius: 6px;">
+            <div id="toggleContent" style="display: none; margin-top: 15px; padding: 15px; background: #23262f; border-radius: 6px;">
                 <h4>Dynamic Content</h4>
                 <p>This content was toggled by clicking the button above.</p>
                 <button onclick="hideContent()" data-testid="hide-btn">Hide Content</button>
             </div>
         </div>
     </div>
-
+    <!-- Login Modal -->
+    <div class="login-modal" id="loginModal">
+        <div class="modal-content">
+            <h2 style="text-align:center;color:#4f8cff;">Login</h2>
+            <div class="form-group">
+                <label for="loginEmail">Email</label>
+                <input type="email" id="loginEmail" placeholder="Enter your email" autocomplete="username">
+            </div>
+            <div class="form-group">
+                <label for="loginPassword">Password</label>
+                <input type="password" id="loginPassword" placeholder="Enter your password" autocomplete="current-password">
+            </div>
+            <button onclick="loginDemo()">Login</button>
+            <div class="msg" id="loginMsg"></div>
+        </div>
+    </div>
     <script>
+        // LinkedIn-style header logic
+        function toggleProfileDropdown(e) {
+            e.stopPropagation();
+            document.getElementById('profileDropdown').classList.toggle('show');
+            document.addEventListener('click', closeProfileDropdown, { once: true });
+        }
+        function closeProfileDropdown() {
+            document.getElementById('profileDropdown').classList.remove('show');
+        }
+        function toggleNotifDropdown() {
+            document.getElementById('notifDropdown').classList.toggle('show');
+            document.addEventListener('click', closeNotifDropdown, { once: true });
+        }
+        function closeNotifDropdown() {
+            document.getElementById('notifDropdown').classList.remove('show');
+        }
+        // Login modal logic
+        function showLoginModal(e) {
+            e.preventDefault();
+            document.getElementById('loginModal').classList.add('show');
+        }
+        function loginDemo() {
+            const email = document.getElementById('loginEmail').value.trim();
+            const password = document.getElementById('loginPassword').value.trim();
+            const msg = document.getElementById('loginMsg');
+            if (email === 'demo@linkedin.com' && password === 'demo123') {
+                msg.textContent = 'Login successful!';
+                msg.className = 'msg';
+                msg.style.display = 'block';
+                setTimeout(() => {
+                    document.getElementById('loginModal').classList.remove('show');
+                    msg.style.display = 'none';
+                }, 1200);
+            } else {
+                msg.textContent = 'Invalid email or password.';
+                msg.className = 'msg error';
+                msg.style.display = 'block';
+            }
+        }
+        document.getElementById('loginModal').addEventListener('click', function(e) {
+            if (e.target === this) this.classList.remove('show');
+        });
+        // Post creation logic
+        function createPost() {
+            const input = document.getElementById('postInput');
+            const postList = document.getElementById('postList');
+            const text = input.value.trim();
+            if (text) {
+                const div = document.createElement('div');
+                div.className = 'post-item';
+                div.innerHTML = `<strong>Demo User</strong><br>${text}`;
+                postList.prepend(div);
+                input.value = '';
+            }
+        }
         // Navigation functions
         function goToGoogle() {
             window.open('https://www.google.com', '_blank');
         }
-        
         function goToExample() {
             window.open('https://example.com', '_blank');
         }
-        
         function goToGitHub() {
             window.open('https://github.com', '_blank');
         }
-        
         // Search function
         function performSearch() {
             const searchTerm = document.getElementById('searchInput').value;
@@ -307,35 +553,28 @@
                 document.getElementById('searchResults').style.display = 'block';
             }
         }
-        
         function selectResult(resultId) {
             alert(`Selected result: ${resultId}`);
         }
-        
         // Form handling
         document.getElementById('testForm').addEventListener('submit', function(e) {
             e.preventDefault();
             document.getElementById('formSuccess').style.display = 'block';
         });
-        
         // Action functions
         function showAlert() {
             alert('This is a test alert!');
         }
-        
         function toggleContent() {
             const content = document.getElementById('toggleContent');
             content.style.display = content.style.display === 'none' ? 'block' : 'none';
         }
-        
         function hideContent() {
             document.getElementById('toggleContent').style.display = 'none';
         }
-        
         function scrollToBottom() {
             window.scrollTo(0, document.body.scrollHeight);
         }
-        
         // Handle Enter key in search
         document.getElementById('searchInput').addEventListener('keypress', function(e) {
             if (e.key === 'Enter') {

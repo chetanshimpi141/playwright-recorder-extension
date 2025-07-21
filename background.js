@@ -57,24 +57,28 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
   try {
     switch (request.action) {
       case 'startRecording':
-        try {
-          startRecording(request.fileName, request.language);
-          // Send immediate response to popup
-          sendResponse({ 
-            success: true, 
-            actionCount: actionCount,
-            fileName: currentFileName
-          });
-        } catch (error) {
-          console.error('Error starting recording:', error);
-          sendResponse({ 
-            success: false, 
-            error: error.message 
-          });
-        }
+        setRecordingState(true);
+        chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
+          if (tabs[0]) {
+            chrome.scripting.executeScript({
+              target: { tabId: tabs[0].id },
+              files: ['content.js']
+            }, () => {
+              chrome.tabs.sendMessage(tabs[0].id, { action: 'startRecording' }, (response) => {
+                sendResponse({
+                  success: true,
+                  actionCount: actionCount,
+                  fileName: currentFileName
+                });
+              });
+            });
+          }
+        });
+        return true; // Keep message channel open for async response
         break;
         
       case 'stopRecording':
+        setRecordingState(false);
         stopRecording();
         sendResponse({ 
           success: true, 
@@ -123,19 +127,20 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
         break;
         
       case 'getRecordingStatus':
-        sendResponse({ 
-          isRecording: isRecording,
-          actionCount: actionCount,
-          fileName: currentFileName,
-          language: currentLanguage
+        getRecordingState((recording) => {
+          sendResponse({ 
+            isRecording: recording,
+            actionCount: actionCount,
+            fileName: currentFileName,
+            language: currentLanguage
+          });
         });
+        return true;
         break;
         
       case 'validateAI':
-        validateAIConnection(request.apiKey, request.model)
-          .then(result => sendResponse(result))
-          .catch(error => sendResponse({ success: false, error: error.message }));
-        return true; // Keep message channel open for async response
+        // This case is no longer relevant as AI is removed
+        sendResponse({ success: true, message: 'AI validation not applicable' });
         break;
         
       case 'pageUnloading':
@@ -178,6 +183,13 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
   }
   
   return true; // Keep message channel open for async response
+});
+
+chrome.action.onClicked.addListener((tab) => {
+  chrome.scripting.executeScript({
+    target: { tabId: tab.id },
+    files: ['content.js']
+  });
 });
 
 function startRecording(fileName, language) {
@@ -457,11 +469,8 @@ function tryAlternativeDownload(content, fileName) {
 }
 
 async function generatePlaywrightCode(actions, language) {
-  if (AI_CONFIG.enabled && aiApiKey) {
-    return await generateAIPoweredCode(actions, language);
-  } else {
-    return generateTraditionalCode(actions, language);
-  }
+  // Remove all AI-powered code generation logic and proxy usage
+  return generateTraditionalCode(actions, language);
 }
 
 // Add a function to review code with AI
@@ -484,31 +493,19 @@ async function reviewCodeWithAI(code, language) {
   }
 }
 
+// Helper to get the user's saved AI API key from chrome.storage.sync
+async function getUserApiKey() {
+  return new Promise((resolve) => {
+    chrome.storage.sync.get(['aiApiKey'], function(result) {
+      resolve(result.aiApiKey || null);
+    });
+  });
+}
+
+// Update generateAIPoweredCode to use the user's API key
 async function generateAIPoweredCode(actions, language) {
-  try {
-    console.log('Generating AI-powered code for', actions.length, 'actions');
-    
-    // Prepare context for AI
-    const context = prepareAIContext(actions, language);
-    
-    // Generate AI prompt
-    const prompt = createAIPrompt(context);
-    
-    // Call AI API to generate code
-    const aiResponse = await callAIAPI(prompt);
-    
-    let code = aiResponse && aiResponse.code ? aiResponse.code : null;
-    if (!code) {
-      console.warn('AI generation failed, falling back to traditional generation');
-      return generateTraditionalCode(actions, language);
-    }
-    // Automatically review and improve the code with AI
-    code = await reviewCodeWithAI(code, language);
-    return code;
-  } catch (error) {
-    console.error('AI code generation error:', error);
-    return generateTraditionalCode(actions, language);
-  }
+  // Fallback to traditional code generation only
+  return generateTraditionalCode(actions, language);
 }
 
 function prepareAIContext(actions, language) {
@@ -1472,4 +1469,15 @@ function generateJavaFramePrefix(framePath) {
   });
   
   return prefix;
+}
+
+// Helper to persist and retrieve isRecording state
+function setRecordingState(state) {
+  isRecording = state;
+  chrome.storage.local.set({ isRecording: state });
+}
+function getRecordingState(callback) {
+  chrome.storage.local.get(['isRecording'], (result) => {
+    callback(result.isRecording || false);
+  });
 }

@@ -26,6 +26,10 @@
     "url": "https://github.com/yourusername/playwright-recorder-extension/issues"
   },
   "homepage": "https://github.com/yourusername/playwright-recorder-extension#readme",
-  "devDependencies": {},
-  "dependencies": {}
-} 
+  "dependencies": {
+    "axios": "^1.10.0",
+    "cors": "^2.8.5",
+    "dotenv": "^17.2.0",
+    "express": "^5.1.0"
+  }
+}

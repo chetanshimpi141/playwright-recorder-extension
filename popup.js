@@ -60,6 +60,7 @@ document.addEventListener('DOMContentLoaded', function() {
       if (response.success) {
         updateUI(false, 0);
         showScriptPreview(response.actions, response.actionCount);
+        downloadScript(); // Automatically download after stopping
       } else {
         alert('Failed to stop recording: ' + response.error);
       }
