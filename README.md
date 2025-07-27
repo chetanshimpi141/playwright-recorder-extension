@@ -1,5 +1,7 @@
 # 🎭 Playwright Recorder Extension
 
+[Playwright Test Recorder on Chrome Web Store](https://chromewebstore.google.com/detail/playwright-test-recorder/hnddcdgphbhgifeponmeomebhmhhhomd?utm_source=item-share-cp)
+
 A powerful Chrome extension that records user interactions and generates high-quality Playwright test scripts with AI-powered code generation.
 
 ## ✨ Features
